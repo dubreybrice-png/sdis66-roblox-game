@@ -1,33 +1,37 @@
 --[[
-	ClientMain
-	Point d'entrée client - initialise l'UI et les contrôles
+	ClientMain V30
+	Point d'entrée client - initialise le jeu côté client
+	CAMERA NORMALE (3ème personne) pour jouer correctement
 ]]
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
 
 local player = Players.LocalPlayer
 
-print("[Client] Initializing for", player.Name)
+print("[Client V30] Initializing for", player.Name)
 
 -- Attendre que le personnage soit chargé
 player.CharacterAdded:Connect(function(character)
 	print("[Client] Character loaded")
 	
-	-- CAMÉRA EN HAUTEUR pour voir toute la grande ville (200x200)
+	-- CAMERA NORMALE - 3ème personne (ne PAS mettre en Scriptable!)
 	local camera = workspace.CurrentCamera
-	camera.CameraType = Enum.CameraType.Scriptable
-	camera.FieldOfView = 90 -- FOV large
+	camera.CameraType = Enum.CameraType.Custom
+	camera.FieldOfView = 70
 	
-	-- Position: très haut (y=200) pour voir toute la map
-	camera.CFrame = CFrame.new(0, 200, 100) * CFrame.Angles(math.rad(-50), 0, 0)
+	-- Attendre le HumanoidRootPart
+	local hrp = character:WaitForChild("HumanoidRootPart", 5)
+	if hrp then
+		camera.CameraSubject = character:WaitForChild("Humanoid")
+	end
 	
-	print("[Client] Camera positioned high (can see whole town)")
+	print("[Client] Camera set to normal 3rd person")
 end)
 
--- Charger l'UI de base
-local StarterGui = game:GetService("StarterGui")
+-- Configurer l'UI de base
 StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, true)
-StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health, false) -- On utilisera une UI custom
+StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health, false) -- UI custom dans PlayerHUD
 
-print("[Client] Ready!")
+print("[Client V30] Ready!")

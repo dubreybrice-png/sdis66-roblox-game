@@ -21,7 +21,7 @@ function DojoBuilder.CreateDojo()
 	dojo.Parent = workspace
 	
 	-- POSITION: PÉRIPHÉRIE - À CÔTÉ DE LA ZONE SOMBRE (OUEST) - BIEN LOIN!
-	local dojoPos = Vector3.new(-220, 0, 0)
+	local dojoPos = Vector3.new(-280, 0, 0)
 	print("[DojoBuilder] 🟢 Creating Dojo at position:", dojoPos)
 	
 	-- Arène principale

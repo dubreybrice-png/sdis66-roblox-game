@@ -1,11 +1,11 @@
 --[[
-	Init V25 - MEGA UPDATE
-	Bigger text, fixed I key, monster movement, achievements panel
+	Init V30 - MEGA UPDATE
+	Full town, quest system, day/night cycle, weather
 ]]
 
 print("===================================================")
-print("  VERSION TEST 25 - BIGGER TEXT + MOVEMENT FIX")
-print("  I key fix, BodyVelocity, Achievements panel, Combos")
+print("  VERSION 30 - MEGA UPDATE")
+print("  Town walls, buildings, quests, day/night, weather")
 print("===================================================")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Players = game:GetService("Players")
@@ -52,6 +52,10 @@ local remotesList = {
 	"NotifyPlayer",          -- notification generique
 	"OpenBuildingUI",        -- ouvrir l'UI d'un batiment
 	"DamageNumber",          -- afficher numero de degats flottant
+	-- V30 Nouveau
+	"QuestList",             -- demander la liste des quetes
+	"QuestUpdate",           -- envoyer update quetes au client
+	"QuestComplete",         -- notification quete terminee
 }
 
 for _, remoteName in ipairs(remotesList) do
@@ -209,4 +213,4 @@ Players.PlayerAdded:Connect(function(player)
 	end)
 end)
 
-print("[Server] V24 Init complete! All systems go.")
+print("[Server] V30 Init complete! All systems go.")
