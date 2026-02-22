@@ -141,7 +141,10 @@ local function updateCharacterClone()
 	end
 	local character = player.Character
 	if not character then return end
-	charClone = character:Clone()
+	if not character:FindFirstChild("HumanoidRootPart") then return end
+	local ok, result = pcall(function() return character:Clone() end)
+	if not ok or not result then return end
+	charClone = result
 	for _, d in ipairs(charClone:GetDescendants()) do
 		if d:IsA("Script") or d:IsA("LocalScript") or d:IsA("BillboardGui") then d:Destroy() end
 	end

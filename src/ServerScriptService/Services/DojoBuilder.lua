@@ -57,21 +57,33 @@ function DojoBuilder.CreateDojo()
 		wall.Parent = dojo
 	end
 	
-	-- Plateforme spectateurs
+	-- Plateforme spectateurs (au sol, pas flottante!)
 	local spectator = Instance.new("Part")
 	spectator.Name = "SpectatorArea"
 	spectator.Size = Vector3.new(100, 1, 20)
-	spectator.Position = dojoPos + Vector3.new(0, 21, -50)
+	spectator.Position = dojoPos + Vector3.new(0, 1, -50)
 	spectator.Anchored = true
 	spectator.Material = Enum.Material.Marble
 	spectator.BrickColor = BrickColor.new("Medium stone grey")
 	spectator.Parent = dojo
 	
-	-- Enseigne du dojo
+	-- Gradins
+	for row = 1, 3 do
+		local gradin = Instance.new("Part")
+		gradin.Name = "Gradin" .. row
+		gradin.Size = Vector3.new(80, 1, 5)
+		gradin.Position = dojoPos + Vector3.new(0, row * 1.5, -50 - row * 5)
+		gradin.Anchored = true
+		gradin.Material = Enum.Material.Marble
+		gradin.BrickColor = BrickColor.new("Medium stone grey")
+		gradin.Parent = dojo
+	end
+	
+	-- Enseigne du dojo (au-dessus du mur, pas flottante!)
 	local sign = Instance.new("Part")
 	sign.Name = "Sign"
-	sign.Size = Vector3.new(30, 8, 2)
-	sign.Position = dojoPos + Vector3.new(0, 35, -42)
+	sign.Size = Vector3.new(30, 6, 2)
+	sign.Position = dojoPos + Vector3.new(0, 24, -42)
 	sign.Anchored = true
 	sign.Material = Enum.Material.Wood
 	sign.BrickColor = BrickColor.new("Dark oak")
@@ -79,7 +91,9 @@ function DojoBuilder.CreateDojo()
 	
 	local billboard = Instance.new("BillboardGui")
 	billboard.Size = UDim2.fromOffset(200, 100)
-	billboard.StudsOffset = Vector3.new(0, 5, 0)
+	billboard.StudsOffset = Vector3.new(0, 3, 0)
+	billboard.AlwaysOnTop = false
+	billboard.MaxDistance = 80
 	billboard.Parent = sign
 	
 	local label = Instance.new("TextLabel")

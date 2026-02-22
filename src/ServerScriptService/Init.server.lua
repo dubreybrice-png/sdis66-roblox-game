@@ -1,11 +1,12 @@
 --[[
-	Init V30 - MEGA UPDATE
-	Full town, quest system, day/night cycle, weather
+	Init V35 - MEGA UPDATE 2
+	Class from start, Rebirth, Talent Trees, Combos, Hop movement
+	Fixed: lighting, building overlap, gates aligned, signs MaxDistance
 ]]
 
 print("===================================================")
-print("  VERSION 30 - MEGA UPDATE")
-print("  Town walls, buildings, quests, day/night, weather")
+print("  VERSION 35 - MEGA UPDATE 2")
+print("  Class+Rebirth, Talents, Combos, Hop, Fixed world")
 print("===================================================")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Players = game:GetService("Players")
@@ -16,7 +17,7 @@ local WeaponSystem = require(ServerScriptService.Services.WeaponSystem)
 local WorldBuilder = require(ServerScriptService.Services.WorldBuilder)
 local DojoBuilder = require(ServerScriptService.Services.DojoBuilder)
 
-print("[Server] Initializing Monster Defense V25...")
+print("[Server] Initializing Monster Defense V35...")
 
 -- CREER LE DOSSIER REMOTES
 local remotes = ReplicatedStorage:FindFirstChild("Remotes")
@@ -33,29 +34,22 @@ local remotesList = {
 	"UseSkill", "ShowDialogue", "CloseDialogue", "ShowDialogueSimple",
 	-- V19
 	"AllocateSkillPoint",
-	-- V20 Nouveau
-	"RequestCaptureLaser",   -- tirer le laser de capture
-	"PurchaseBuilding",      -- acheter/reparer un batiment
-	"UpgradeBuilding",       -- ameliorer un batiment
-	"AssignMonster",         -- assigner monstre (defense/mine/training/none)
-	"DepositGold",           -- deposer or a la banque
-	"SelectHotbar",          -- changer slot hotbar
-	"RepairCrystal",         -- reparer cristal manuellement
-	"ChangeClass",           -- changer de classe
-	"OpenStorageUI",         -- ouvrir l'UI de stockage
+	-- V20
+	"RequestCaptureLaser", "PurchaseBuilding", "UpgradeBuilding",
+	"AssignMonster", "DepositGold", "SelectHotbar", "RepairCrystal",
+	"ChangeClass", "OpenStorageUI",
 	-- Reponses serveur -> client
-	"UpdateMonsterStorage",  -- envoyer les donnees monstres au client
-	"CaptureResult",         -- resultat capture (success/fail)
-	"WaveUpdate",            -- mise a jour vague
-	"CrystalStateUpdate",    -- etat du cristal
-	"WeatherUpdate",         -- meteo
-	"NotifyPlayer",          -- notification generique
-	"OpenBuildingUI",        -- ouvrir l'UI d'un batiment
-	"DamageNumber",          -- afficher numero de degats flottant
-	-- V30 Nouveau
-	"QuestList",             -- demander la liste des quetes
-	"QuestUpdate",           -- envoyer update quetes au client
-	"QuestComplete",         -- notification quete terminee
+	"UpdateMonsterStorage", "CaptureResult", "WaveUpdate",
+	"CrystalStateUpdate", "WeatherUpdate", "NotifyPlayer",
+	"OpenBuildingUI", "DamageNumber",
+	-- V30
+	"QuestList", "QuestUpdate", "QuestComplete",
+	-- V35 NOUVEAU
+	"RequestRebirth",        -- renaissance
+	"AllocateTalent",        -- arbre de talents
+	"ComboTriggered",        -- combo élémentaire déclenché
+	"AchievementUnlocked",   -- succès débloqué
+	"AchievementBonus",      -- bonus de succès appliqué
 }
 
 for _, remoteName in ipairs(remotesList) do
@@ -79,7 +73,7 @@ local npc, npcDetector, npcPrompt = WorldBuilder.CreateNPC()
 print("[Server] World created (with improved lighting)")
 
 -- Systemes auto-executes (.server.lua)
-print("[Server] Auto-systems: MonsterSpawner, CaptureSystem, CrystalManager, BuildingSystem, MonsterManager")
+print("[Server] Auto-systems: MonsterSpawner, CaptureSystem, BuildingSystem, MonsterManager, ClassSystem V35, ComboSystem")
 
 -- === HANDLER: AllocateSkillPoint ===
 local allocateRemote = remotes:WaitForChild("AllocateSkillPoint")
@@ -186,6 +180,8 @@ Players.PlayerAdded:Connect(function(player)
 		player:SetAttribute("StorageCapacity", PlayerDataService:GetMonsterStorageCapacity(player))
 		player:SetAttribute("SelectedHotbar", d.SelectedHotbar or 1)
 		player:SetAttribute("PlayerRebirths", d.PlayerRebirths or 0)
+		player:SetAttribute("TalentPoints", d.TalentPoints or 0)
+		player:SetAttribute("ClassTitle", d.ClassTitle or d.CurrentClass)
 		
 		-- Starter info
 		if d.StarterMonster then
@@ -213,4 +209,4 @@ Players.PlayerAdded:Connect(function(player)
 	end)
 end)
 
-print("[Server] V30 Init complete! All systems go.")
+print("[Server] V35 Init complete! Class+Rebirth+Talents+Combos ready.")

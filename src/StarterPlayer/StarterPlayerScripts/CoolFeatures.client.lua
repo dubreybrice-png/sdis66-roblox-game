@@ -472,24 +472,43 @@ end)
 local sprintUseCount = 0
 
 local ACHIEVEMENTS = {
-	{id = "first_kill", name = "Premier Sang", desc = "Elimine ton premier monstre", icon = "🗡️", condition = function() return (player:GetAttribute("TotalKills") or 0) >= 1 end},
-	{id = "kill_10", name = "Chasseur", desc = "Elimine 10 monstres", icon = "⚔️", condition = function() return (player:GetAttribute("TotalKills") or 0) >= 10 end},
-	{id = "kill_50", name = "Guerrier Aguerri", desc = "Elimine 50 monstres", icon = "🏆", condition = function() return (player:GetAttribute("TotalKills") or 0) >= 50 end},
-	{id = "kill_100", name = "Legende Vivante", desc = "Elimine 100 monstres", icon = "👑", condition = function() return (player:GetAttribute("TotalKills") or 0) >= 100 end},
-	{id = "first_capture", name = "Dresseur Debutant", desc = "Capture ton premier monstre", icon = "🎯", condition = function() return (player:GetAttribute("TotalCaptures") or 0) >= 1 end},
-	{id = "capture_5", name = "Collectionneur", desc = "Capture 5 monstres", icon = "📦", condition = function() return (player:GetAttribute("TotalCaptures") or 0) >= 5 end},
-	{id = "capture_10", name = "Maitre Dresseur", desc = "Capture 10 monstres", icon = "🌟", condition = function() return (player:GetAttribute("TotalCaptures") or 0) >= 10 end},
-	{id = "wave_5", name = "Survivant", desc = "Atteins la vague 5", icon = "🌊", condition = function() return (player:GetAttribute("HighestWave") or 0) >= 5 end},
-	{id = "wave_10", name = "Tenace", desc = "Atteins la vague 10", icon = "💪", condition = function() return (player:GetAttribute("HighestWave") or 0) >= 10 end},
-	{id = "wave_25", name = "Indestructible", desc = "Atteins la vague 25", icon = "🔥", condition = function() return (player:GetAttribute("HighestWave") or 0) >= 25 end},
-	{id = "level_5", name = "Apprenti", desc = "Atteins le niveau 5", icon = "⭐", condition = function() return (player:GetAttribute("PlayerLevel") or 1) >= 5 end},
-	{id = "level_10", name = "Expert", desc = "Atteins le niveau 10", icon = "🌟", condition = function() return (player:GetAttribute("PlayerLevel") or 1) >= 10 end},
-	{id = "level_20", name = "Grand Maitre", desc = "Atteins le niveau 20", icon = "💫", condition = function() return (player:GetAttribute("PlayerLevel") or 1) >= 20 end},
-	{id = "boss_kill", name = "Tueur de Boss", desc = "Abats un boss", icon = "👑", condition = function() return (player:GetAttribute("BossesKilled") or 0) >= 1 end},
-	{id = "boss_5", name = "Chasseur de Boss", desc = "Abats 5 boss", icon = "💀", condition = function() return (player:GetAttribute("BossesKilled") or 0) >= 5 end},
-	{id = "rich", name = "Riche", desc = "Possede 500 or", icon = "💰", condition = function() return (player:GetAttribute("GoldWallet") or 0) >= 500 end},
-	{id = "wealthy", name = "Milliardaire", desc = "Possede 2000 or", icon = "💎", condition = function() return (player:GetAttribute("GoldWallet") or 0) >= 2000 end},
-	{id = "speed_demon", name = "Demon de Vitesse", desc = "Sprinte 50 fois", icon = "🏃", condition = function() return sprintUseCount >= 50 end},
+	-- KILLS (bonus ATK)
+	{id = "first_kill", name = "Premier Sang", desc = "Elimine ton premier monstre", icon = "🗡️", bonus = "+2% ATK", bonusStat = "ATK", bonusVal = 2, condition = function() return (player:GetAttribute("TotalKills") or 0) >= 1 end},
+	{id = "kill_10", name = "Chasseur", desc = "Elimine 10 monstres", icon = "⚔️", bonus = "+3% ATK", bonusStat = "ATK", bonusVal = 3, condition = function() return (player:GetAttribute("TotalKills") or 0) >= 10 end},
+	{id = "kill_50", name = "Guerrier Aguerri", desc = "Elimine 50 monstres", icon = "🏆", bonus = "+5% ATK", bonusStat = "ATK", bonusVal = 5, condition = function() return (player:GetAttribute("TotalKills") or 0) >= 50 end},
+	{id = "kill_100", name = "Legende Vivante", desc = "Elimine 100 monstres", icon = "👑", bonus = "+8% ATK", bonusStat = "ATK", bonusVal = 8, condition = function() return (player:GetAttribute("TotalKills") or 0) >= 100 end},
+	{id = "kill_500", name = "Exterminateur", desc = "Elimine 500 monstres", icon = "💀", bonus = "+12% ATK", bonusStat = "ATK", bonusVal = 12, condition = function() return (player:GetAttribute("TotalKills") or 0) >= 500 end},
+	-- CAPTURES (bonus capture rate)
+	{id = "first_capture", name = "Dresseur Debutant", desc = "Capture ton premier monstre", icon = "🎯", bonus = "+2% capture", bonusStat = "CaptureRate", bonusVal = 2, condition = function() return (player:GetAttribute("TotalCaptures") or 0) >= 1 end},
+	{id = "capture_5", name = "Collectionneur", desc = "Capture 5 monstres", icon = "📦", bonus = "+5% capture", bonusStat = "CaptureRate", bonusVal = 5, condition = function() return (player:GetAttribute("TotalCaptures") or 0) >= 5 end},
+	{id = "capture_10", name = "Maitre Dresseur", desc = "Capture 10 monstres", icon = "🌟", bonus = "+8% capture", bonusStat = "CaptureRate", bonusVal = 8, condition = function() return (player:GetAttribute("TotalCaptures") or 0) >= 10 end},
+	{id = "capture_25", name = "Expert Dresseur", desc = "Capture 25 monstres", icon = "🎪", bonus = "+12% capture", bonusStat = "CaptureRate", bonusVal = 12, condition = function() return (player:GetAttribute("TotalCaptures") or 0) >= 25 end},
+	-- WAVES (bonus DEF)
+	{id = "wave_5", name = "Survivant", desc = "Atteins la vague 5", icon = "🌊", bonus = "+3% DEF", bonusStat = "DEF", bonusVal = 3, condition = function() return (player:GetAttribute("HighestWave") or 0) >= 5 end},
+	{id = "wave_10", name = "Tenace", desc = "Atteins la vague 10", icon = "💪", bonus = "+5% DEF", bonusStat = "DEF", bonusVal = 5, condition = function() return (player:GetAttribute("HighestWave") or 0) >= 10 end},
+	{id = "wave_25", name = "Indestructible", desc = "Atteins la vague 25", icon = "🔥", bonus = "+10% DEF", bonusStat = "DEF", bonusVal = 10, condition = function() return (player:GetAttribute("HighestWave") or 0) >= 25 end},
+	{id = "wave_50", name = "Immortel", desc = "Atteins la vague 50", icon = "⚡", bonus = "+15% DEF", bonusStat = "DEF", bonusVal = 15, condition = function() return (player:GetAttribute("HighestWave") or 0) >= 50 end},
+	-- LEVEL (bonus XP)
+	{id = "level_5", name = "Apprenti", desc = "Atteins le niveau 5", icon = "⭐", bonus = "+3% XP", bonusStat = "XPBonus", bonusVal = 3, condition = function() return (player:GetAttribute("PlayerLevel") or 1) >= 5 end},
+	{id = "level_10", name = "Expert", desc = "Atteins le niveau 10", icon = "🌟", bonus = "+5% XP", bonusStat = "XPBonus", bonusVal = 5, condition = function() return (player:GetAttribute("PlayerLevel") or 1) >= 10 end},
+	{id = "level_20", name = "Grand Maitre", desc = "Atteins le niveau 20", icon = "💫", bonus = "+8% XP", bonusStat = "XPBonus", bonusVal = 8, condition = function() return (player:GetAttribute("PlayerLevel") or 1) >= 20 end},
+	{id = "level_50", name = "Legendaire", desc = "Atteins le niveau 50", icon = "🌠", bonus = "+15% XP", bonusStat = "XPBonus", bonusVal = 15, condition = function() return (player:GetAttribute("PlayerLevel") or 1) >= 50 end},
+	-- BOSS (bonus crit)
+	{id = "boss_kill", name = "Tueur de Boss", desc = "Abats un boss", icon = "👑", bonus = "+3% crit", bonusStat = "CritRate", bonusVal = 3, condition = function() return (player:GetAttribute("BossesKilled") or 0) >= 1 end},
+	{id = "boss_5", name = "Chasseur de Boss", desc = "Abats 5 boss", icon = "💀", bonus = "+5% crit", bonusStat = "CritRate", bonusVal = 5, condition = function() return (player:GetAttribute("BossesKilled") or 0) >= 5 end},
+	{id = "boss_20", name = "Fléau des Boss", desc = "Abats 20 boss", icon = "☠️", bonus = "+10% crit", bonusStat = "CritRate", bonusVal = 10, condition = function() return (player:GetAttribute("BossesKilled") or 0) >= 20 end},
+	-- GOLD (bonus mine = +% or gagné!) ← CE QUE TU VEUX!
+	{id = "gold_500", name = "Riche", desc = "Possede 500 or", icon = "💰", bonus = "+5% or mine", bonusStat = "GoldMineBonus", bonusVal = 5, condition = function() return ((player:GetAttribute("GoldWallet") or 0) + (player:GetAttribute("GoldBank") or 0)) >= 500 end},
+	{id = "gold_2000", name = "Fortune", desc = "Possede 2000 or", icon = "💎", bonus = "+10% or mine", bonusStat = "GoldMineBonus", bonusVal = 10, condition = function() return ((player:GetAttribute("GoldWallet") or 0) + (player:GetAttribute("GoldBank") or 0)) >= 2000 end},
+	{id = "gold_5000", name = "Magnat", desc = "Possede 5000 or", icon = "🏦", bonus = "+15% or mine", bonusStat = "GoldMineBonus", bonusVal = 15, condition = function() return ((player:GetAttribute("GoldWallet") or 0) + (player:GetAttribute("GoldBank") or 0)) >= 5000 end},
+	{id = "gold_10000", name = "Milliardaire", desc = "Possede 10 000 or", icon = "👑💎", bonus = "+25% or mine", bonusStat = "GoldMineBonus", bonusVal = 25, condition = function() return ((player:GetAttribute("GoldWallet") or 0) + (player:GetAttribute("GoldBank") or 0)) >= 10000 end},
+	-- REBIRTH (bonus global)
+	{id = "rebirth_1", name = "Renaissance", desc = "Premiere renaissance", icon = "🌅", bonus = "+5% tous stats", bonusStat = "AllStats", bonusVal = 5, condition = function() return (player:GetAttribute("PlayerRebirths") or 0) >= 1 end},
+	{id = "rebirth_3", name = "Phoenix", desc = "3 renaissances", icon = "🔥🌅", bonus = "+10% tous stats", bonusStat = "AllStats", bonusVal = 10, condition = function() return (player:GetAttribute("PlayerRebirths") or 0) >= 3 end},
+	{id = "rebirth_5", name = "Eternel", desc = "5 renaissances", icon = "✨🌅", bonus = "+15% tous stats", bonusStat = "AllStats", bonusVal = 15, condition = function() return (player:GetAttribute("PlayerRebirths") or 0) >= 5 end},
+	{id = "rebirth_10", name = "Transcendant", desc = "10 renaissances", icon = "🌟🌅", bonus = "+25% tous stats", bonusStat = "AllStats", bonusVal = 25, condition = function() return (player:GetAttribute("PlayerRebirths") or 0) >= 10 end},
+	-- SPRINT
+	{id = "speed_demon", name = "Demon de Vitesse", desc = "Sprinte 50 fois", icon = "🏃", bonus = "+3% vitesse", bonusStat = "Speed", bonusVal = 3, condition = function() return sprintUseCount >= 50 end},
 }
 
 local unlockedAchievements = {}
@@ -549,12 +568,18 @@ local function showAchievementPopup(achievement)
 	aTag.Size = UDim2.new(1, -70, 0, 14)
 	aTag.Position = UDim2.new(0, 65, 0, 56)
 	aTag.BackgroundTransparency = 1
-	aTag.TextColor3 = Color3.fromRGB(120, 150, 80)
+	aTag.TextColor3 = Color3.fromRGB(120, 255, 120)
 	aTag.TextSize = 12
-	aTag.Font = Enum.Font.Gotham
+	aTag.Font = Enum.Font.GothamBold
 	aTag.TextXAlignment = Enum.TextXAlignment.Left
-	aTag.Text = "SUCCES DEBLOQUE!"
+	aTag.Text = "SUCCES DEBLOQUE! " .. (achievement.bonus and ("→ " .. achievement.bonus) or "")
 	aTag.Parent = popup
+
+	-- Apply bonus as attribute!
+	if achievement.bonusStat and achievement.bonusVal then
+		local current = player:GetAttribute("AchBonus_" .. achievement.bonusStat) or 0
+		player:SetAttribute("AchBonus_" .. achievement.bonusStat, current + achievement.bonusVal)
+	end
 
 	TweenService:Create(popup, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
 		Position = UDim2.new(0.5, -170, 0, 15)
@@ -707,14 +732,27 @@ local function refreshAchievementsPanel()
 		rDesc.Parent = row
 
 		local rStatus = Instance.new("TextLabel")
-		rStatus.Size = UDim2.new(0, 100, 0, 20)
-		rStatus.Position = UDim2.new(1, -110, 0, 17)
+		rStatus.Size = UDim2.new(0, 100, 0, 14)
+		rStatus.Position = UDim2.new(1, -110, 0, 5)
 		rStatus.BackgroundTransparency = 1
 		rStatus.TextColor3 = isUnlocked and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(80, 80, 80)
-		rStatus.TextSize = 14
+		rStatus.TextSize = 13
 		rStatus.Font = Enum.Font.GothamBold
 		rStatus.Text = isUnlocked and "✅ OBTENU" or "❌ Verrou."
 		rStatus.Parent = row
+
+		-- Show bonus
+		if ach.bonus then
+			local rBonus = Instance.new("TextLabel")
+			rBonus.Size = UDim2.new(0, 100, 0, 14)
+			rBonus.Position = UDim2.new(1, -110, 0, 22)
+			rBonus.BackgroundTransparency = 1
+			rBonus.TextColor3 = isUnlocked and Color3.fromRGB(100, 255, 200) or Color3.fromRGB(60, 60, 70)
+			rBonus.TextSize = 11
+			rBonus.Font = Enum.Font.Gotham
+			rBonus.Text = ach.bonus
+			rBonus.Parent = row
+		end
 	end
 	achScroll.CanvasSize = UDim2.new(0, 0, 0, #ACHIEVEMENTS * 59 + 10)
 	achTitle.Text = "🏆 HAUTS FAITS (" .. unlocked_count .. "/" .. #ACHIEVEMENTS .. ")"

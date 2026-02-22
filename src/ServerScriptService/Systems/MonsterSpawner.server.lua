@@ -613,16 +613,18 @@ local function createWildMonster(spawnPos, wildLevel, isBoss, speciesId, rarity)
 	-- BodyVelocity pour mouvement fiable (body.Velocity ne marche pas sur les modeles welds)
 	local bodyMover = Instance.new("BodyVelocity")
 	bodyMover.Name = "Mover"
-	bodyMover.MaxForce = Vector3.new(50000, 0, 50000) -- pas de force verticale (gravite)
+	bodyMover.MaxForce = Vector3.new(50000, 50000, 50000) -- force verticale aussi pour hop!
 	bodyMover.Velocity = Vector3.new(0, 0, 0)
 	bodyMover.P = 1250
 	bodyMover.Parent = body
 	
 	monster.Parent = Workspace
 	
-	-- === IA: marcher vers cristal et attaquer ===
+	-- === IA: marcher vers cristal et attaquer (avec HOP!) ===
 	local lastCrystalAttack = 0
 	local lastPlayerAttack = 0
+	local lastHopTime = 0
+	local hopInterval = 1.5 + math.random() * 1.5 -- hop toutes les 1.5-3s
 	local crystalPos = getCrystalPos()
 	
 	task.spawn(function()
@@ -705,12 +707,27 @@ local function createWildMonster(spawnPos, wildLevel, isBoss, speciesId, rarity)
 					end
 				end
 			else
-				-- Marcher vers cristal (BodyVelocity)
+				-- Marcher vers cristal (BodyVelocity) + HOP!
 				local direction = (crystalPos - bodyPos).Unit
-				bodyMover.Velocity = direction * speed
+				local now = tick()
+				local hopY = 0
+				if now - lastHopTime > hopInterval then
+					hopY = 22 -- impulse vers le haut (hop!)
+					lastHopTime = now
+					hopInterval = 1.2 + math.random() * 1.8 -- varier le rythme
+				end
+				bodyMover.Velocity = Vector3.new(direction.X * speed, hopY, direction.Z * speed)
 				-- Orienter le monstre vers la cible
 				local lookCF = CFrame.lookAt(body.Position, body.Position + direction)
 				body.CFrame = CFrame.new(body.Position) * CFrame.Angles(0, select(2, lookCF:ToEulerAnglesYXZ()), 0)
+				-- Reset Y velocity after short delay
+				if hopY > 0 then
+					task.delay(0.3, function()
+						if bodyMover.Parent then
+							bodyMover.Velocity = Vector3.new(direction.X * speed, -5, direction.Z * speed)
+						end
+					end)
+				end
 			end
 			
 			task.wait(0.15)
@@ -863,17 +880,20 @@ local function spawnDefenderModel(player, monsterData)
 	defender:SetAttribute("OwnerUserId", player.UserId)
 	defender:SetAttribute("MonsterUID", monsterData.UID)
 	
-	-- BodyVelocity pour mouvement fiable des defenseurs
+	-- BodyVelocity pour mouvement fiable des defenseurs (avec hop!)
 	local defMover = Instance.new("BodyVelocity")
 	defMover.Name = "Mover"
-	defMover.MaxForce = Vector3.new(50000, 0, 50000)
+	defMover.MaxForce = Vector3.new(50000, 50000, 50000)
 	defMover.Velocity = Vector3.new(0, 0, 0)
 	defMover.P = 1250
 	defMover.Parent = body
 	
 	defender.Parent = Workspace
 	
-	-- IA defenseur: attaquer monstres sauvages
+	-- IA defenseur: attaquer monstres sauvages (AMELIOREE V35!)
+	local defLastHop = 0
+	local defHopInterval = 2 + math.random() * 2
+	local patrolAngle = math.random() * math.pi * 2
 	task.spawn(function()
 		while defender.Parent and hum.Health > 0 do
 			-- Update XP bar du defenseur
@@ -886,9 +906,11 @@ local function spawnDefenderModel(player, monsterData)
 				xpBarFill.Size = UDim2.new(xpRatio, 0, 1, 0)
 				xpTextDef.Text = "XP: " .. mXP .. "/" .. mReq
 				nameLabel.Text = currentMonster.Name .. " Nv." .. mLevel .. " (DEF)"
+				-- Use latest stats for damage!
+				monsterData = currentMonster
 			end
 			local nearestEnemy = nil
-			local nearestDist = 25
+			local nearestDist = 60 -- RANGE ELARGI! (etait 25)
 			
 			for _, obj in ipairs(Workspace:GetChildren()) do
 				if obj:IsA("Model") and (obj.Name:match("^Wild_") or obj.Name:match("^Boss_")) and obj.PrimaryPart then
@@ -907,9 +929,10 @@ local function spawnDefenderModel(player, monsterData)
 					defMover.Velocity = Vector3.new(0, 0, 0) -- stop pour attaquer
 					local enemyHum = nearestEnemy:FindFirstChildOfClass("Humanoid")
 					if enemyHum and enemyHum.Health > 0 then
+						local atkStat = (monsterData.Stats and monsterData.Stats.ATK) or 15
 						local dmg = math.random(
-							math.floor(monsterData.Stats.ATK * 0.8),
-							math.floor(monsterData.Stats.ATK * 1.2)
+							math.floor(atkStat * 0.8),
+							math.floor(atkStat * 1.2)
 						)
 						
 						-- Bonus element
@@ -940,20 +963,43 @@ local function spawnDefenderModel(player, monsterData)
 					task.wait(1.2)
 				else
 					local dir = (nearestEnemy.PrimaryPart.Position - body.Position).Unit
-					defMover.Velocity = dir * 18
+					-- Hop quand on poursuit!
+					local hopY = 0
+					if tick() - defLastHop > defHopInterval then
+						hopY = 18
+						defLastHop = tick()
+						defHopInterval = 1.5 + math.random() * 2
+					end
+					defMover.Velocity = Vector3.new(dir.X * 22, hopY, dir.Z * 22)
 					-- Face direction
 					local lookCF = CFrame.lookAt(body.Position, body.Position + dir)
 					body.CFrame = CFrame.new(body.Position) * CFrame.Angles(0, select(2, lookCF:ToEulerAnglesYXZ()), 0)
+					if hopY > 0 then
+						task.delay(0.3, function()
+							if defMover.Parent then defMover.Velocity = Vector3.new(dir.X * 22, -5, dir.Z * 22) end
+						end)
+					end
 					task.wait(0.15)
 				end
 			else
-				-- Retourner pres du cristal
+				-- PATROL autour du cristal (cercles!) au lieu de rester immobile
 				local distCrystal = (body.Position - getCrystalPos()).Magnitude
-				if distCrystal > 15 then
+				if distCrystal > 35 then
+					-- Trop loin, retourner
 					local retDir = (getCrystalPos() - body.Position).Unit
-					defMover.Velocity = retDir * 12
+					defMover.Velocity = Vector3.new(retDir.X * 14, 0, retDir.Z * 14)
+				elseif distCrystal < 5 then
+					-- Trop pres, s'eloigner un peu
+					local awayDir = (body.Position - getCrystalPos()).Unit
+					defMover.Velocity = Vector3.new(awayDir.X * 8, 0, awayDir.Z * 8)
 				else
-					defMover.Velocity = Vector3.new(0, 0, 0)
+					-- Patrouiller en cercle!
+					patrolAngle = patrolAngle + 0.08
+					local patrolPos = getCrystalPos() + Vector3.new(math.cos(patrolAngle) * 20, 0, math.sin(patrolAngle) * 20)
+					local patDir = (patrolPos - body.Position).Unit
+					defMover.Velocity = Vector3.new(patDir.X * 8, 0, patDir.Z * 8)
+					local lookCF = CFrame.lookAt(body.Position, body.Position + patDir)
+					body.CFrame = CFrame.new(body.Position) * CFrame.Angles(0, select(2, lookCF:ToEulerAnglesYXZ()), 0)
 				end
 				task.wait(0.5)
 			end
