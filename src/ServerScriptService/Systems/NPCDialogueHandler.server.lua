@@ -193,14 +193,9 @@ if changeClassRemote then
 			print("[NPCDialogueHandler] Fallback: Given NOVICE_STAFF to", player.Name)
 		end
 		
-		-- ACTIVER LES MONSTRES (le MonsterSpawner ecoute aussi RequestStarter)
-		local requestStarter = remotes:FindFirstChild("RequestStarter")
-		if requestStarter then
-			-- Fire RequestStarter pour activer le spawner de monstres
-			requestStarter:Fire(player)
-		end
-		
-		print("[NPCDialogueHandler] Class selection complete!")
+		-- Le MonsterSpawner ecoute ChangeClass.OnServerEvent directement
+		-- Il donne le monstre starter et active les vagues
+		print("[NPCDialogueHandler] Class selection complete! MonsterSpawner handles starter.")
 	end)
 	print("[NPCDialogueHandler] ChangeClass listener connected")
 else

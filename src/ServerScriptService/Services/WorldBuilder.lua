@@ -310,13 +310,15 @@ function WorldBuilder.CreateTown()
 			tL.Parent = torch
 		end
 		-- Zone sign above gate (NOT AlwaysOnTop, with MaxDistance)
-		local signOffset
-		if gp[2] == "N" or gp[2] == "S" then
-			signOffset = V3(0, wallH + 4, 0)
+		local signOffset = V3(0, wallH + 4, 0)
+		local signCFrame
+		if gp[2] == "E" or gp[2] == "W" then
+			-- Tourner le panneau de 90° pour les portes Est/Ouest
+			signCFrame = CF(gp[1] + signOffset) * CA(0, RAD(90), 0)
 		else
-			signOffset = V3(0, wallH + 4, 0)
+			signCFrame = CF(gp[1] + signOffset)
 		end
-		local gateSign = fp(town, "GateSign_" .. gp[2], CF(gp[1] + signOffset), V3(12, 4, 0.5), "Really black", Enum.Material.SmoothPlastic)
+		local gateSign = fp(town, "GateSign_" .. gp[2], signCFrame, V3(12, 4, 0.5), "Really black", Enum.Material.SmoothPlastic)
 		local sGui = Instance.new("SurfaceGui")
 		sGui.Face = Enum.NormalId.Front
 		sGui.Parent = gateSign

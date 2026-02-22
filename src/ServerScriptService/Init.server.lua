@@ -1,12 +1,11 @@
 --[[
-	Init V35 - MEGA UPDATE 2
-	Class from start, Rebirth, Talent Trees, Combos, Hop movement
-	Fixed: lighting, building overlap, gates aligned, signs MaxDistance
+	Init V35.2 - Spider Update
+	Araignees 3D, Fix InventoryUI, MonsterSkinSystem MeshPart
 ]]
 
 print("===================================================")
-print("  VERSION 35 - MEGA UPDATE 2")
-print("  Class+Rebirth, Talents, Combos, Hop, Fixed world")
+print("  VERSION 35.2 - SPIDER UPDATE")
+print("  Araignees 3D, Fix Inventaire, Skins MeshPart")
 print("===================================================")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Players = game:GetService("Players")

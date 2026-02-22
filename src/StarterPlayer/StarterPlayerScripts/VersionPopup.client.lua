@@ -27,16 +27,18 @@ popup.Parent = playerGui
 local label = Instance.new("TextLabel")
 label.Size = UDim2.new(0, 600, 0, 200)
 label.Position = UDim2.new(0.5, -300, 0.5, -100)
-label.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-label.BorderSizePixel = 10
-label.BorderColor3 = Color3.fromRGB(255, 255, 0)
-label.Text = "VERSION 30\nMEGA UPDATE: Ville, Quêtes, Météo!"
+label.BackgroundColor3 = Color3.fromRGB(40, 0, 60)
+label.BorderSizePixel = 4
+label.BorderColor3 = Color3.fromRGB(180, 50, 255)
+label.Text = "🕷️ VERSION 35.2 🕷️\nAraignées, Fix Inventaire, Skins 3D!"
 label.TextColor3 = Color3.fromRGB(255, 255, 255)
-label.TextSize = 50
-label.Font = Enum.Font.SourceSansBold
+label.TextSize = 42
+label.Font = Enum.Font.GothamBold
 label.Parent = popup
 
-print("🔵 POPUP AFFICHÉE À L'ÉCRAN!")
+Instance.new("UICorner", label).CornerRadius = UDim.new(0, 12)
+
+print("🔵 POPUP V35.2 AFFICHÉE!")
 
 task.delay(10, function()
 	popup:Destroy()

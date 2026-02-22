@@ -1454,34 +1454,61 @@ task.spawn(function()
 	end
 end)
 
--- === ECOUTER LE CHOIX DU STARTER ===
+-- === ECOUTER LE CHOIX DE CLASSE (donne starter + active vagues) ===
+-- Map classe -> monstre starter
+local CLASS_STARTER_MAP = {
+	Guerrier = "flameguard",
+	Mage = "voltsprite",
+	Archer = "shadewisp",
+	Moine = "aquashell",
+}
+
 if remotes then
-	local requestStarter = remotes:WaitForChild("RequestStarter", 5)
-	if requestStarter then
-		requestStarter.OnServerEvent:Connect(function(player, starterId)
-			if MONSTERS_ENABLED then return end
+	local changeClassRemote = remotes:WaitForChild("ChangeClass", 5)
+	if changeClassRemote then
+		changeClassRemote.OnServerEvent:Connect(function(player, className)
+			local data = PlayerDataService:GetData(player)
+			if not data then return end
 			
-			print("[MonsterSpawner] STARTER CHOSEN:", starterId, "by", player.Name)
+			-- Ne pas re-donner un starter si deja fait
+			if data.StarterMonster and data.StarterMonster ~= "" then
+				print("[MonsterSpawner] Player already has starter, just enabling waves")
+				if not MONSTERS_ENABLED then
+					MONSTERS_ENABLED = true
+					print("[MonsterSpawner] WAVES ENABLED (returning player)!")
+				end
+				return
+			end
 			
-			-- Mapper starterId vers speciesId
-			local starterMap = {[1] = "flameguard", [2] = "aquashell", [3] = "voltsprite"}
-			local speciesId = starterMap[starterId] or "flameguard"
+			local speciesId = CLASS_STARTER_MAP[className] or "flameguard"
+			print("[MonsterSpawner] CLASS:", className, "-> STARTER:", speciesId, "for", player.Name)
 			
 			-- Creer l'instance monstre dans PlayerData
 			local monsterInstance = MonsterDB:CreateInstance(speciesId, 5, "Commun")
-			local data = PlayerDataService:GetData(player)
-			if data and monsterInstance then
+			if monsterInstance then
 				table.insert(data.Monsters, monsterInstance)
 				data.StarterMonster = monsterInstance.UID
 				data.DefenseSlots = {monsterInstance.UID}
 				monsterInstance.Assignment = "defense"
+				data.HasStarter = true
+				data.Bestiary = data.Bestiary or {}
 				data.Bestiary[speciesId] = "captured"
 				
 				-- Spawn le modele defenseur
 				spawnDefenderModel(player, monsterInstance)
+				print("[MonsterSpawner] Starter", speciesId, "spawned as defender!")
 				
-				-- Activer les vagues apres 3s
-				task.delay(3, function()
+				-- Notifier le joueur
+				local notifyRemote = remotes:FindFirstChild("NotifyPlayer")
+				if notifyRemote then
+					notifyRemote:FireClient(player, "🎉 " .. monsterInstance.Name .. " rejoint ton equipe!")
+					task.delay(2, function()
+						notifyRemote:FireClient(player, "⚔️ Les vagues de monstres arrivent dans 3 secondes...")
+					end)
+				end
+				
+				-- Activer les vagues apres 5s
+				task.delay(5, function()
 					MONSTERS_ENABLED = true
 					print("[MonsterSpawner] WAVES ENABLED!")
 				end)
@@ -1490,7 +1517,7 @@ if remotes then
 	end
 end
 
-print("[MonsterSpawner V20] Ready! Wave system loaded.")
+print("[MonsterSpawner V35.2] Ready! Wave system loaded.")
 
 -- === REGEN PASSIVE JOUEUR ===
 task.spawn(function()
