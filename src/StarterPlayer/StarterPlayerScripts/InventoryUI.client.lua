@@ -139,14 +139,23 @@ local function updateCharacterClone()
 	for _, c in ipairs(viewport:GetChildren()) do
 		if c:IsA("Model") or c:IsA("BasePart") then c:Destroy() end
 	end
+	charClone = nil
 	local character = player.Character
 	if not character then return end
+	if not character:IsA("Model") then return end
 	if not character:FindFirstChild("HumanoidRootPart") then return end
+	if not character:FindFirstChildOfClass("Humanoid") then return end
 	local ok, result = pcall(function() return character:Clone() end)
-	if not ok or not result then return end
+	if not ok or result == nil then return end
+	if typeof(result) ~= "Instance" then return end
 	charClone = result
-	for _, d in ipairs(charClone:GetDescendants()) do
-		if d:IsA("Script") or d:IsA("LocalScript") or d:IsA("BillboardGui") then d:Destroy() end
+	local descendants = charClone:GetDescendants()
+	if descendants then
+		for _, d in ipairs(descendants) do
+			if d:IsA("Script") or d:IsA("LocalScript") or d:IsA("BillboardGui") then
+				pcall(function() d:Destroy() end)
+			end
+		end
 	end
 	charClone.Parent = viewport
 	local hrp = charClone:FindFirstChild("HumanoidRootPart")

@@ -1,14 +1,15 @@
 --[[
-	MonsterSpawner V20 - Systeme de vagues complet
+	MonsterSpawner V35.2 - Systeme de vagues complet
 	- Vagues progressives avec compteur
 	- Boss toutes les 25 vagues
 	- Monstres assommes (knockout) pendant 5s pour capture
 	- Raretes et elements varies
 	- Monstres defenseurs automatiques
 	- Scaling avec VilleLevel
+	- Modele 3D araignee (spider) avec 8 pattes, cheliceres, yeux multiples
 ]]
 
-print("[MonsterSpawner V20] Loading...")
+print("[MonsterSpawner V35.2] Loading...")
 
 local Workspace = game.Workspace
 local Players = game:GetService("Players")
@@ -18,6 +19,7 @@ local PlayerDataService = require(ServerScriptService.Services.PlayerDataService
 local GameConfig = require(ReplicatedStorage.Data.GameConfig)
 local MonsterDB = require(ReplicatedStorage.Data.MonsterDatabase)
 local ElementSystem = require(ReplicatedStorage.Data.ElementSystem)
+local MonsterSkinSystem = require(ServerScriptService.Services.MonsterSkinSystem)
 
 -- === STATE ===
 local MONSTERS_ENABLED = false
@@ -119,6 +121,14 @@ local MONSTER_FACE_TEXTURES = {
 	"rbxassetid://135286085838302",
 }
 
+-- Textures yeux araignee (rouge/vert veneneux)
+local SPIDER_EYE_COLORS = {
+	Color3.fromRGB(255, 0, 0),
+	Color3.fromRGB(0, 255, 50),
+	Color3.fromRGB(255, 100, 0),
+	Color3.fromRGB(200, 0, 200),
+}
+
 local function addMonsterFace(body)
 	local textureId = MONSTER_FACE_TEXTURES[math.random(1, #MONSTER_FACE_TEXTURES)]
 	-- Face avant
@@ -131,6 +141,227 @@ local function addMonsterFace(body)
 	decalBack.Texture = textureId
 	decalBack.Face = Enum.NormalId.Back
 	decalBack.Parent = body
+end
+
+-- === CONSTRUIRE UN CORPS D'ARAIGNEE (8 pattes, abdomen, cheliceres) ===
+local function buildSpiderBody(monster, baseSize, bodyColor, bodyMat, spawnPos, isBoss)
+	-- Couleur araignee: sombre avec reflets
+	local spiderColor = Color3.new(
+		math.max(0, bodyColor.R * 0.4),
+		math.max(0, bodyColor.G * 0.3),
+		math.max(0, bodyColor.B * 0.3)
+	)
+	local legColor = Color3.new(
+		math.max(0, spiderColor.R * 0.7),
+		math.max(0, spiderColor.G * 0.7),
+		math.max(0, spiderColor.B * 0.7)
+	)
+	
+	-- === ABDOMEN (gros ovale arriere) ===
+	local abdomen = Instance.new("Part")
+	abdomen.Name = "Abdomen"
+	abdomen.Shape = Enum.PartType.Ball
+	abdomen.Size = Vector3.new(baseSize * 1.6, baseSize * 1.2, baseSize * 2.0)
+	abdomen.Color = spiderColor
+	abdomen.Material = bodyMat
+	abdomen.CanCollide = false
+	abdomen.CFrame = CFrame.new(spawnPos + Vector3.new(0, baseSize * 0.8, baseSize * 0.6))
+	abdomen.Parent = monster
+	
+	-- Motif sur l'abdomen (croix rouge/verte selon espece)
+	local markColor = isBoss and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(200, 50, 50)
+	local mark1 = Instance.new("Part")
+	mark1.Name = "AbdomenMark"
+	mark1.Size = Vector3.new(baseSize * 0.3, baseSize * 0.05, baseSize * 0.8)
+	mark1.Color = markColor
+	mark1.Material = Enum.Material.Neon
+	mark1.CanCollide = false
+	mark1.CFrame = abdomen.CFrame * CFrame.new(0, baseSize * 0.6, 0)
+	mark1.Parent = monster
+	local mw1 = Instance.new("WeldConstraint")
+	mw1.Part0 = abdomen; mw1.Part1 = mark1; mw1.Parent = mark1
+	
+	local mark2 = Instance.new("Part")
+	mark2.Name = "AbdomenMark2"
+	mark2.Size = Vector3.new(baseSize * 0.8, baseSize * 0.05, baseSize * 0.3)
+	mark2.Color = markColor
+	mark2.Material = Enum.Material.Neon
+	mark2.CanCollide = false
+	mark2.CFrame = abdomen.CFrame * CFrame.new(0, baseSize * 0.6, 0)
+	mark2.Parent = monster
+	local mw2 = Instance.new("WeldConstraint")
+	mw2.Part0 = abdomen; mw2.Part1 = mark2; mw2.Parent = mark2
+	
+	-- === CEPHALOTHORAX (corps avant - PrimaryPart) ===
+	local body = Instance.new("Part")
+	body.Name = "Body"
+	body.Size = Vector3.new(baseSize * 1.0, baseSize * 0.7, baseSize * 1.0)
+	body.Color = spiderColor
+	body.Material = bodyMat
+	body.CanCollide = true
+	body.CFrame = CFrame.new(spawnPos + Vector3.new(0, baseSize * 0.7, -baseSize * 0.5))
+	body.Parent = monster
+	monster.PrimaryPart = body
+	
+	-- Weld abdomen au corps
+	local abdWeld = Instance.new("WeldConstraint")
+	abdWeld.Part0 = body; abdWeld.Part1 = abdomen; abdWeld.Parent = abdomen
+	
+	-- === TETE (petite, devant le cephalothorax) ===
+	local head = Instance.new("Part")
+	head.Name = "Head"
+	head.Shape = Enum.PartType.Ball
+	head.Size = Vector3.new(baseSize * 0.6, baseSize * 0.5, baseSize * 0.5)
+	head.Color = spiderColor
+	head.Material = bodyMat
+	head.CanCollide = false
+	head.CFrame = body.CFrame * CFrame.new(0, baseSize * 0.1, -baseSize * 0.6)
+	head.Parent = monster
+	local headWeld = Instance.new("WeldConstraint")
+	headWeld.Part0 = body; headWeld.Part1 = head; headWeld.Parent = head
+	
+	-- === YEUX (6 yeux rouges lumineux) ===
+	local eyeColor = SPIDER_EYE_COLORS[math.random(1, #SPIDER_EYE_COLORS)]
+	local eyePositions = {
+		-- Rangee du haut (2 grands)
+		{offset = CFrame.new(-baseSize * 0.12, baseSize * 0.12, -baseSize * 0.22), size = 0.14},
+		{offset = CFrame.new(baseSize * 0.12, baseSize * 0.12, -baseSize * 0.22), size = 0.14},
+		-- Rangee du milieu (2 moyens)
+		{offset = CFrame.new(-baseSize * 0.08, baseSize * 0.02, -baseSize * 0.24), size = 0.10},
+		{offset = CFrame.new(baseSize * 0.08, baseSize * 0.02, -baseSize * 0.24), size = 0.10},
+		-- Rangee du bas (2 petits)
+		{offset = CFrame.new(-baseSize * 0.05, -baseSize * 0.06, -baseSize * 0.23), size = 0.07},
+		{offset = CFrame.new(baseSize * 0.05, -baseSize * 0.06, -baseSize * 0.23), size = 0.07},
+	}
+	for _, eyeData in ipairs(eyePositions) do
+		local eye = Instance.new("Part")
+		eye.Name = "SpiderEye"
+		eye.Shape = Enum.PartType.Ball
+		eye.Size = Vector3.new(1, 1, 1) * baseSize * eyeData.size
+		eye.Color = eyeColor
+		eye.Material = Enum.Material.Neon
+		eye.CanCollide = false
+		eye.CFrame = head.CFrame * eyeData.offset
+		eye.Parent = monster
+		local ew = Instance.new("WeldConstraint")
+		ew.Part0 = head; ew.Part1 = eye; ew.Parent = eye
+	end
+	
+	-- === CHELICERES / CROCS (2 pinces devant) ===
+	for side = -1, 1, 2 do
+		local fang = Instance.new("Part")
+		fang.Name = "Fang"
+		fang.Size = Vector3.new(baseSize * 0.08, baseSize * 0.35, baseSize * 0.08)
+		fang.Color = isBoss and Color3.fromRGB(255, 50, 0) or Color3.fromRGB(200, 180, 140)
+		fang.Material = Enum.Material.SmoothPlastic
+		fang.CanCollide = false
+		fang.CFrame = head.CFrame * CFrame.new(side * baseSize * 0.12, -baseSize * 0.2, -baseSize * 0.2) * CFrame.Angles(math.rad(20), 0, side * math.rad(15))
+		fang.Parent = monster
+		local fw = Instance.new("WeldConstraint")
+		fw.Part0 = head; fw.Part1 = fang; fw.Parent = fang
+	end
+	
+	-- === 8 PATTES (4 de chaque cote) ===
+	local legPairs = {
+		-- {xOffset, zOffset, angle, longueur}
+		{0.5, -0.3, 35, 1.2},   -- Paire avant
+		{0.55, 0.0, 55, 1.4},   -- Paire milieu-avant
+		{0.5, 0.3, 70, 1.5},    -- Paire milieu-arriere
+		{0.4, 0.6, 80, 1.3},    -- Paire arriere
+	}
+	for _, legData in ipairs(legPairs) do
+		for side = -1, 1, 2 do
+			local xOff, zOff, angle, length = legData[1], legData[2], legData[3], legData[4]
+			
+			-- Segment haut (cuisse)
+			local upperLeg = Instance.new("Part")
+			upperLeg.Name = "SpiderLeg"
+			upperLeg.Size = Vector3.new(baseSize * 0.08, baseSize * length * 0.5, baseSize * 0.08)
+			upperLeg.Color = legColor
+			upperLeg.Material = bodyMat
+			upperLeg.CanCollide = false
+			upperLeg.CFrame = body.CFrame * CFrame.new(
+				side * baseSize * xOff,
+				baseSize * 0.2,
+				baseSize * zOff
+			) * CFrame.Angles(0, 0, side * math.rad(angle))
+			upperLeg.Parent = monster
+			local ulw = Instance.new("WeldConstraint")
+			ulw.Part0 = body; ulw.Part1 = upperLeg; ulw.Parent = upperLeg
+			
+			-- Segment bas (tibia - va vers le sol)
+			local lowerLeg = Instance.new("Part")
+			lowerLeg.Name = "SpiderLegLower"
+			lowerLeg.Size = Vector3.new(baseSize * 0.06, baseSize * length * 0.6, baseSize * 0.06)
+			lowerLeg.Color = legColor
+			lowerLeg.Material = bodyMat
+			lowerLeg.CanCollide = false
+			lowerLeg.CFrame = upperLeg.CFrame * CFrame.new(
+				side * baseSize * length * 0.25,
+				-baseSize * length * 0.3,
+				0
+			) * CFrame.Angles(0, 0, -side * math.rad(angle * 0.7))
+			lowerLeg.Parent = monster
+			local llw = Instance.new("WeldConstraint")
+			llw.Part0 = upperLeg; llw.Part1 = lowerLeg; llw.Parent = lowerLeg
+		end
+	end
+	
+	-- === FILIERE (bout de l'abdomen pour la soie) ===
+	local spinneret = Instance.new("Part")
+	spinneret.Name = "Spinneret"
+	spinneret.Shape = Enum.PartType.Cylinder
+	spinneret.Size = Vector3.new(baseSize * 0.3, baseSize * 0.15, baseSize * 0.15)
+	spinneret.Color = Color3.new(spiderColor.R * 1.3, spiderColor.G * 1.3, spiderColor.B * 1.3)
+	spinneret.Material = Enum.Material.SmoothPlastic
+	spinneret.CanCollide = false
+	spinneret.CFrame = abdomen.CFrame * CFrame.new(0, -baseSize * 0.2, baseSize * 0.9) * CFrame.Angles(0, 0, math.rad(90))
+	spinneret.Parent = monster
+	local sw = Instance.new("WeldConstraint")
+	sw.Part0 = abdomen; sw.Part1 = spinneret; sw.Parent = spinneret
+	
+	-- === PARTICULE DE TOILE (effet visuel) ===
+	local webParticle = Instance.new("ParticleEmitter")
+	webParticle.Name = "WebTrail"
+	webParticle.Color = ColorSequence.new(Color3.fromRGB(220, 220, 220))
+	webParticle.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.1),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	webParticle.Lifetime = NumberRange.new(1, 2)
+	webParticle.Rate = isBoss and 8 or 3
+	webParticle.Speed = NumberRange.new(0.5, 1)
+	webParticle.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.5),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	webParticle.Parent = spinneret
+	
+	-- Boss glow pour araignee
+	if isBoss then
+		local glow = Instance.new("PointLight")
+		glow.Brightness = 3
+		glow.Range = 20
+		glow.Color = Color3.fromRGB(255, 0, 50)
+		glow.Parent = body
+		
+		-- Aura sombre pour boss spider
+		local aura = Instance.new("Part")
+		aura.Name = "BossAura"
+		aura.Shape = Enum.PartType.Ball
+		aura.Size = Vector3.new(baseSize * 2.5, baseSize * 2.0, baseSize * 3.0)
+		aura.Color = Color3.fromRGB(60, 0, 20)
+		aura.Material = Enum.Material.ForceField
+		aura.Transparency = 0.75
+		aura.CanCollide = false
+		aura.CFrame = body.CFrame
+		aura.Parent = monster
+		local aw = Instance.new("WeldConstraint")
+		aw.Part0 = body; aw.Part1 = aura; aw.Parent = aura
+	end
+	
+	print("[MonsterSpawner] Built SPIDER model:", monster.Name, "size:", baseSize)
+	return body
 end
 
 -- === CREER UN MONSTRE SAUVAGE ===
@@ -169,8 +400,14 @@ local function createWildMonster(spawnPos, wildLevel, isBoss, speciesId, rarity)
 	local bodyColor = ElementSystem:GetColor(species.element)
 	local bodyMat = isBoss and Enum.Material.ForceField or Enum.Material.SmoothPlastic
 	
-	-- === CORPS (torse ovale) ===
-	local body = Instance.new("Part")
+	local body -- reference au PrimaryPart
+	
+	-- === BRANCHE SPIDER: modele araignee special ===
+	if species.bodyType == "spider" then
+		body = buildSpiderBody(monster, baseSize, bodyColor, bodyMat, spawnPos, isBoss)
+	else
+	-- === CORPS GENERIQUE (torse ovale) ===
+	body = Instance.new("Part")
 	body.Name = "Body"
 	body.Size = Vector3.new(baseSize * 1.4, baseSize * 1.0, baseSize * 1.8)
 	body.Color = bodyColor
@@ -392,6 +629,8 @@ local function createWildMonster(spawnPos, wildLevel, isBoss, speciesId, rarity)
 		glow.Color = bodyColor
 		glow.Parent = body
 	end
+	
+	end -- fin du else (corps generique vs spider)
 	
 	-- Humanoid
 	local humanoid = Instance.new("Humanoid")
@@ -619,6 +858,9 @@ local function createWildMonster(spawnPos, wildLevel, isBoss, speciesId, rarity)
 	bodyMover.Parent = body
 	
 	monster.Parent = Workspace
+	
+	-- Appliquer skin/mesh selon le type de monstre
+	MonsterSkinSystem:AutoApply(monster, speciesId)
 	
 	-- === IA: marcher vers cristal et attaquer ===
 	local lastCrystalAttack = 0

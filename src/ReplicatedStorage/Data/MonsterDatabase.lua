@@ -1,6 +1,7 @@
 --[[
-	MonsterDatabase V20 - Base de donnees complete des monstres
-	33 monstres, 9 elements, 5 raretes, evolutions, skills
+	MonsterDatabase V35.2 - Base de donnees complete des monstres
+	37 monstres, 9 elements, 5 raretes, evolutions, skills
+	+ Araignees (Spider) element Tenebres avec modele 3D special
 ]]
 
 local MonsterDatabase = {}
@@ -80,6 +81,10 @@ MonsterDatabase.SKILLS = {
 	-- Tenebres
 	void = {name = "Frappe du Vide", element = "Tenebres", dmgMult = 2.5, cooldown = 10, desc = "Attaque du neant"},
 	absorption = {name = "Absorption", element = "Tenebres", dmgMult = 1.5, cooldown = 12, desc = "Vole HP", lifesteal = 0.50},
+	-- Araignee (Tenebres)
+	toile = {name = "Toile d'Araignee", element = "Tenebres", dmgMult = 0, cooldown = 10, desc = "Immobilise l'ennemi 3s", debuff = "root"},
+	venin = {name = "Venin Mortel", element = "Tenebres", dmgMult = 1.8, cooldown = 8, desc = "Poison qui draine HP", dot = 0.05},
+	embuscade = {name = "Embuscade", element = "Tenebres", dmgMult = 3.0, cooldown = 15, desc = "Attaque surprise critique"},
 }
 
 -- ===============================
@@ -505,6 +510,48 @@ MonsterDatabase.MONSTERS = {
 		evolvesTo = nil, evolvesFrom = nil,
 		spawnWeight = 1, minVilleLevel = 20,
 		desc = "Legendaire. Bete de l'eclipse totale.",
+	},
+
+	-- ====== ARAIGNEES (TENEBRES - modele 3D special) ======
+	spiderling = {
+		name = "Spiderling", element = "Tenebres",
+		stats = {ATK = 10, Agility = 16, Vitality = 8},
+		color = Color3.fromRGB(60, 30, 10), size = 1.8,
+		skills = {toile = 5, venin = 15, embuscade = 30},
+		evolvesTo = "shadowspider", evolvesFrom = nil,
+		spawnWeight = 18, minVilleLevel = 3,
+		bodyType = "spider",
+		desc = "Une petite araignee venimeuse et rapide.",
+	},
+	shadowspider = {
+		name = "Shadowspider", element = "Tenebres",
+		stats = {ATK = 18, Agility = 22, Vitality = 14},
+		color = Color3.fromRGB(40, 15, 5), size = 2.8,
+		skills = {toile = 1, venin = 5, embuscade = 18},
+		evolvesTo = "arachnoqueen", evolvesFrom = "spiderling",
+		spawnWeight = 0, minVilleLevel = 999,
+		bodyType = "spider",
+		desc = "Evolution de Spiderling. Araignee d'ombre furtive.",
+	},
+	arachnoqueen = {
+		name = "Arachnoqueen", element = "Tenebres",
+		stats = {ATK = 28, Agility = 26, Vitality = 24},
+		color = Color3.fromRGB(20, 5, 0), size = 4.0,
+		skills = {toile = 1, venin = 1, embuscade = 10},
+		evolvesTo = nil, evolvesFrom = "shadowspider",
+		spawnWeight = 0, minVilleLevel = 999,
+		bodyType = "spider",
+		desc = "Forme finale. Reine arachnide des tenebres.",
+	},
+	venomweaver = {
+		name = "Venomweaver", element = "Tenebres",
+		stats = {ATK = 22, Agility = 20, Vitality = 16},
+		color = Color3.fromRGB(80, 20, 60), size = 3.2,
+		skills = {toile = 3, venin = 8, embuscade = 20},
+		evolvesTo = nil, evolvesFrom = nil,
+		spawnWeight = 5, minVilleLevel = 8,
+		bodyType = "spider",
+		desc = "Une tisseuse de venin empoisonnant tout sur son passage.",
 	},
 }
 
