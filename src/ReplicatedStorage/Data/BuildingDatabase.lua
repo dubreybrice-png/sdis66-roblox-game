@@ -58,7 +58,7 @@ BuildingDatabase.BUILDINGS = {
 	-- ====== HALL DES CLASSES ======
 	class_hall = {
 		name = "Hall des Classes",
-		desc = "Choisis ta classe au niveau 10. Guerrier, Archer, Mage, Acolyte.",
+		desc = "Ameliore ta classe. Guerrier, Archer, Mage, Moine.",
 		icon = "🏛️",
 		era = 1,
 		repairCost = nil,

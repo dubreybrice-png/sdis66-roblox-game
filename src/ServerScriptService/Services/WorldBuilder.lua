@@ -816,7 +816,7 @@ function WorldBuilder.CreateClassHall()
 	local classes = {
 		{name = "Guerrier", color = Color3.fromRGB(200, 50, 50), emoji = "⚔️", offset = V3(-14, 0, -5), desc = "Force brute\nATK +5, DEF +3", starterMonster = "flameguard"},
 		{name = "Mage", color = Color3.fromRGB(100, 50, 200), emoji = "🔮", offset = V3(-4, 0, -5), desc = "Puissance arcane\nMagie, AoE", starterMonster = "voltsprite"},
-		{name = "Voleur", color = Color3.fromRGB(50, 50, 50), emoji = "🗡️", offset = V3(6, 0, -5), desc = "Critiques, Mobilité\nBackstab, Dash", starterMonster = "shadeveil"},
+		{name = "Archer", color = Color3.fromRGB(40, 160, 40), emoji = "🏹", offset = V3(6, 0, -5), desc = "Distance, Précision\nFlèches infinies", starterMonster = "shadeveil"},
 		{name = "Moine", color = Color3.fromRGB(255, 220, 50), emoji = "🙏", offset = V3(16, 0, -5), desc = "Sustain, Support\nSoins, Buffs", starterMonster = "aquashell"},
 	}
 

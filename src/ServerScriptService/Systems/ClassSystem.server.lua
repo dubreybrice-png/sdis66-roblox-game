@@ -9,7 +9,7 @@
 	Classes et évolutions:
 	  Guerrier → Chevalier → Paladin → Champion → Légende
 	  Mage → Sorcier → Archimage → Sage → Transcendant  
-	  Voleur → Assassin → Ombre → Fantôme → Néant
+	  Archer → Chasseur → Sniper → Tireur d'élite → Oeil divin
 	  Moine → Prêtre → Évêque → Cardinal → Divin
 ]]
 
@@ -42,13 +42,13 @@ local CLASS_DATA = {
 		rebirthNames = {"Mage", "Sorcier", "Archimage", "Sage", "Transcendant"},
 		rebirthBonusPer = {ATK = 4, DEF = 1, Vitality = 1},
 	},
-	Voleur = {
-		emoji = "🗡️",
-		color = Color3.fromRGB(50, 50, 50),
+	Archer = {
+		emoji = "🏹",
+		color = Color3.fromRGB(40, 160, 40),
 		starterMonster = "shadeveil",
-		description = "Critiques, esquive, mobilité",
+		description = "Distance, précision, flèches infinies",
 		baseBonus = {ATK = 4, DEF = 1, Agility = 5},
-		rebirthNames = {"Voleur", "Assassin", "Ombre", "Fantôme", "Néant"},
+		rebirthNames = {"Archer", "Chasseur", "Sniper", "Tireur d'élite", "Oeil divin"},
 		rebirthBonusPer = {ATK = 2, Agility = 4, DEF = 0},
 	},
 	Moine = {
@@ -286,42 +286,42 @@ local TALENT_TREES = {
 			{name="Créateur", desc="Nouvel élément", stat="Ultimate", bonus=1, reqRebirth=10},
 		},
 	},
-	Voleur = {
-		["Assassinat"] = {
-			{name="Lame Cachée", desc="+10% crit", stat="CritRate", bonus=10},
-			{name="Backstab", desc="+15% dos", stat="BackDMG", bonus=15},
-			{name="Poison", desc="+5% poison", stat="PoisonDMG", bonus=5},
-			{name="Exécution", desc="+20% crit dmg", stat="CritDMG", bonus=20},
-			{name="Assassinat", desc="+25% si <30% HP", stat="ExecuteDMG", bonus=25},
-			{name="Ombre Mortelle", desc="+15% crit", stat="CritRate", bonus=15, reqRebirth=2},
-			{name="Lame Fantôme", desc="+30% backstab", stat="BackDMG", bonus=30, reqRebirth=4},
-			{name="Neurotoxine", desc="+20% poison", stat="PoisonDMG", bonus=20, reqRebirth=6},
-			{name="One Shot", desc="+50% crit dmg", stat="CritDMG", bonus=50, reqRebirth=8},
-			{name="Death Mark", desc="Marque mortelle", stat="Ultimate", bonus=1, reqRebirth=10},
+	Archer = {
+		["Précision"] = {
+			{name="Visée", desc="+10% précision", stat="Accuracy", bonus=10},
+			{name="Tir Rapide", desc="+10% vitesse tir", stat="AttackSpeed", bonus=10},
+			{name="Headshot", desc="+15% crit", stat="CritRate", bonus=15},
+			{name="Pluie de Flèches", desc="+10% AoE", stat="AoEDMG", bonus=10},
+			{name="Oeil de Faucon", desc="+20% range", stat="Range", bonus=20},
+			{name="Flèche Perçante", desc="+15% pénétration", stat="ArmorPen", bonus=15, reqRebirth=2},
+			{name="Tir Chargé", desc="+25% crit dmg", stat="CritDMG", bonus=25, reqRebirth=4},
+			{name="Multi-Tir", desc="+2 projectiles", stat="MultiShot", bonus=2, reqRebirth=6},
+			{name="Barrage", desc="+30% vitesse tir", stat="AttackSpeed", bonus=30, reqRebirth=8},
+			{name="Oeil Divin", desc="Tir guidé", stat="Ultimate", bonus=1, reqRebirth=10},
 		},
 		["Agilité"] = {
 			{name="Esquive", desc="+8% esquive", stat="Dodge", bonus=8},
 			{name="Sprint", desc="+10% vitesse", stat="Speed", bonus=10},
-			{name="Double Saut", desc="+1 saut", stat="ExtraJump", bonus=1},
+			{name="Roulade", desc="+1 dash", stat="DashCount", bonus=1},
 			{name="Glissade", desc="+15% esquive", stat="Dodge", bonus=15},
-			{name="Dash", desc="+1 dash", stat="DashCount", bonus=1},
+			{name="Acrobatie", desc="+1 saut", stat="ExtraJump", bonus=1},
 			{name="Fantôme", desc="+20% vitesse", stat="Speed", bonus=20, reqRebirth=2},
-			{name="Invisibilité", desc="+5s stealth", stat="Stealth", bonus=5, reqRebirth=4},
-			{name="Téléportation", desc="+1 teleport", stat="Teleport", bonus=1, reqRebirth=6},
-			{name="Intouchable", desc="+25% esquive", stat="Dodge", bonus=25, reqRebirth=8},
-			{name="Néant", desc="Forme éthérée", stat="Ultimate", bonus=1, reqRebirth=10},
+			{name="Camouflage", desc="+5s stealth", stat="Stealth", bonus=5, reqRebirth=4},
+			{name="Évasion", desc="+25% esquive", stat="Dodge", bonus=25, reqRebirth=6},
+			{name="Intouchable", desc="+30% esquive", stat="Dodge", bonus=30, reqRebirth=8},
+			{name="Vent Divin", desc="Téléportation", stat="Ultimate", bonus=1, reqRebirth=10},
 		},
-		["Pillage"] = {
-			{name="Pickpocket", desc="+10% or", stat="GoldBonus", bonus=10},
-			{name="Trésor", desc="+5% drop rare", stat="RareDrop", bonus=5},
-			{name="Vol", desc="+15% or", stat="GoldBonus", bonus=15},
-			{name="Chance", desc="+10% drop rare", stat="RareDrop", bonus=10},
-			{name="Jackpot", desc="+20% or", stat="GoldBonus", bonus=20},
-			{name="Magot", desc="+15% drop rare", stat="RareDrop", bonus=15, reqRebirth=2},
-			{name="Fortune", desc="+30% or", stat="GoldBonus", bonus=30, reqRebirth=4},
-			{name="Légende", desc="+20% légendaire", stat="LegDrop", bonus=20, reqRebirth=6},
-			{name="Midas", desc="+50% or", stat="GoldBonus", bonus=50, reqRebirth=8},
-			{name="Dragon Hoard", desc="Or boss infini", stat="Ultimate", bonus=1, reqRebirth=10},
+		["Chasse"] = {
+			{name="Traqueur", desc="+10% or", stat="GoldBonus", bonus=10},
+			{name="Collecteur", desc="+5% drop rare", stat="RareDrop", bonus=5},
+			{name="Piègeur", desc="+10% slow", stat="SlowEffect", bonus=10},
+			{name="Flèche Poison", desc="+8% poison", stat="PoisonDMG", bonus=8},
+			{name="Éclaireur", desc="+15% or", stat="GoldBonus", bonus=15},
+			{name="Flèche Feu", desc="+10% brûlure", stat="BurnDMG", bonus=10, reqRebirth=2},
+			{name="Flèche Glace", desc="+15% freeze", stat="FreezeDMG", bonus=15, reqRebirth=4},
+			{name="Grand Chasseur", desc="+20% drop rare", stat="RareDrop", bonus=20, reqRebirth=6},
+			{name="Maître Piégeur", desc="+30% slow zone", stat="SlowZone", bonus=30, reqRebirth=8},
+			{name="Roi de la Chasse", desc="Marquage boss", stat="Ultimate", bonus=1, reqRebirth=10},
 		},
 	},
 	Moine = {

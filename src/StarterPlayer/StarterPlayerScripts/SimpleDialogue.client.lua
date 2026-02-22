@@ -1,9 +1,11 @@
 --[[
-	SimpleDialogue V18 - Dialogue NPC + Selection Starter
-	Quand le serveur fire ShowDialogueSimple, on affiche le dialogue puis les starters
+	SimpleDialogue V35 - Dialogue NPC + Selection CLASSE (pas starter!)
+	Quand le serveur fire ShowDialogueSimple, on affiche le choix de classe
+	4 classes: Guerrier, Mage, Archer, Moine
+	Chaque classe donne une arme adaptee + un monstre starter
 ]]
 
-print("[SimpleDialogue V18] Script loaded!")
+print("[SimpleDialogue V35] Script loaded!")
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -27,19 +29,56 @@ if not remotes then
 	return
 end
 
-local requestStarter = remotes:WaitForChild("RequestStarter", 10)
-print("[SimpleDialogue] RequestStarter:", requestStarter and "FOUND" or "MISSING")
+local changeClassRemote = remotes:WaitForChild("ChangeClass", 10)
+print("[SimpleDialogue] ChangeClass:", changeClassRemote and "FOUND" or "MISSING")
 
--- === STARTER DATA (local, pas besoin du module serveur) ===
-local STARTERS = {
-	{id = 1, name = "Flameguard", element = "Feu", emoji = "🔥", color = Color3.fromRGB(255, 80, 40), hp = 45, atk = 12, def = 8},
-	{id = 2, name = "Aquashell", element = "Eau", emoji = "💧", color = Color3.fromRGB(40, 120, 255), hp = 50, atk = 9, def = 12},
-	{id = 3, name = "Voltsprite", element = "Electrique", emoji = "⚡", color = Color3.fromRGB(255, 220, 40), hp = 40, atk = 14, def = 7},
+-- === CLASS DATA (affichage local) ===
+local CLASSES = {
+	{
+		name = "Guerrier",
+		emoji = "⚔️",
+		color = Color3.fromRGB(200, 50, 50),
+		weapon = "Epee en bois",
+		weaponEmoji = "🗡️",
+		starter = "Flameguard 🔥",
+		desc = "Force brute, haute defense\nArme: Epee en bois (melee)\nStarter: Flameguard",
+		stats = "ATK +5 | DEF +3 | VIT +2",
+	},
+	{
+		name = "Mage",
+		emoji = "🔮",
+		color = Color3.fromRGB(100, 50, 200),
+		weapon = "Baguette magique",
+		weaponEmoji = "🪄",
+		starter = "Voltsprite ⚡",
+		desc = "Boules de feu a distance\nArme: Baguette (distance, DoT)\nStarter: Voltsprite",
+		stats = "ATK +7 | DEF +1 | VIT +1",
+	},
+	{
+		name = "Archer",
+		emoji = "🏹",
+		color = Color3.fromRGB(40, 160, 40),
+		weapon = "Arc en bois",
+		weaponEmoji = "🏹",
+		starter = "Shadeveil 🌑",
+		desc = "Fleches a distance (infinies)\nArme: Arc (distance, precision)\nStarter: Shadeveil",
+		stats = "ATK +4 | AGI +5 | DEF +1",
+	},
+	{
+		name = "Moine",
+		emoji = "🙏",
+		color = Color3.fromRGB(255, 220, 50),
+		weapon = "Poings",
+		weaponEmoji = "👊",
+		starter = "Aquashell 💧",
+		desc = "Combat au corps a corps\nArme: Poings (melee, rapide)\nStarter: Aquashell",
+		stats = "ATK +2 | DEF +4 | VIT +4",
+	},
 }
 
--- === AFFICHER LE DIALOGUE ===
-local function showDialogueAndStarters()
-	print("[SimpleDialogue] SHOWING DIALOGUE!")
+-- === AFFICHER LE DIALOGUE DE CLASSE ===
+local function showClassSelection()
+	print("[SimpleDialogue] SHOWING CLASS SELECTION!")
 	
 	-- Supprimer un ancien popup s'il existe
 	local old = playerGui:FindFirstChild("DialoguePopup")
@@ -61,7 +100,7 @@ local function showDialogueAndStarters()
 	-- Boite de dialogue
 	local dialog = Instance.new("Frame")
 	dialog.Name = "DialogBox"
-	dialog.Size = UDim2.new(0, 750, 0, 500)
+	dialog.Size = UDim2.new(0, 850, 0, 520)
 	dialog.AnchorPoint = Vector2.new(0.5, 0.5)
 	dialog.Position = UDim2.new(0.5, 0, 0.5, 0)
 	dialog.BackgroundColor3 = Color3.fromRGB(25, 18, 35)
@@ -74,112 +113,144 @@ local function showDialogueAndStarters()
 	corner.CornerRadius = UDim.new(0, 12)
 	corner.Parent = dialog
 	
-	-- Titre
+	-- Titre Aldric
 	local title = Instance.new("TextLabel")
-	title.Size = UDim2.new(1, -20, 0, 45)
-	title.Position = UDim2.new(0, 10, 0, 10)
+	title.Size = UDim2.new(1, -20, 0, 36)
+	title.Position = UDim2.new(0, 10, 0, 8)
 	title.BackgroundTransparency = 1
-	title.TextSize = 26
+	title.TextSize = 22
 	title.Font = Enum.Font.GothamBold
 	title.TextColor3 = Color3.fromRGB(255, 220, 100)
-	title.Text = "Guide Aldric"
+	title.Text = "🧙 Guide Aldric"
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.Parent = dialog
 	
 	-- Texte dialogue
 	local text = Instance.new("TextLabel")
-	text.Size = UDim2.new(1, -20, 0, 100)
-	text.Position = UDim2.new(0, 10, 0, 55)
+	text.Size = UDim2.new(1, -20, 0, 60)
+	text.Position = UDim2.new(0, 10, 0, 44)
 	text.BackgroundTransparency = 1
-	text.TextSize = 15
+	text.TextSize = 13
 	text.Font = Enum.Font.Gotham
 	text.TextColor3 = Color3.new(0.95, 0.95, 0.95)
 	text.TextWrapped = true
 	text.TextXAlignment = Enum.TextXAlignment.Left
 	text.TextYAlignment = Enum.TextYAlignment.Top
-	text.Text = "Bienvenue, nouveau dresseur !\n\nNotre cristal magique est en danger ! Des monstres sauvages l'attaquent sans cesse.\nChoisis un monstre de depart pour nous aider a le proteger !"
+	text.Text = "Bienvenue, heros ! Notre cristal magique est en danger !\nAvant de combattre, tu dois choisir ta CLASSE. Chaque classe a une arme unique et un monstre compagnon. Choisis bien !"
 	text.Parent = dialog
 	
-	-- === SECTION STARTER SELECTION ===
-	local starterTitle = Instance.new("TextLabel")
-	starterTitle.Size = UDim2.new(1, 0, 0, 35)
-	starterTitle.Position = UDim2.new(0, 0, 0, 160)
-	starterTitle.BackgroundTransparency = 1
-	starterTitle.TextSize = 22
-	starterTitle.Font = Enum.Font.GothamBold
-	starterTitle.TextColor3 = Color3.fromRGB(255, 180, 50)
-	starterTitle.Text = "CHOISIS TON MONSTRE DE DEPART"
-	starterTitle.Parent = dialog
+	-- Titre section
+	local classTitle = Instance.new("TextLabel")
+	classTitle.Size = UDim2.new(1, 0, 0, 28)
+	classTitle.Position = UDim2.new(0, 0, 0, 108)
+	classTitle.BackgroundTransparency = 1
+	classTitle.TextSize = 18
+	classTitle.Font = Enum.Font.GothamBold
+	classTitle.TextColor3 = Color3.fromRGB(255, 180, 50)
+	classTitle.Text = "⚔️ CHOISIS TA CLASSE ⚔️"
+	classTitle.Parent = dialog
 	
-	-- Créer les 3 cartes starter
-	for i, starter in ipairs(STARTERS) do
-		local cardX = 30 + ((i - 1) * 235)
+	-- 4 cartes de classe
+	for i, cls in ipairs(CLASSES) do
+		local cardX = 16 + ((i - 1) * 205)
 		
 		local card = Instance.new("Frame")
-		card.Name = "Card_" .. starter.name
-		card.Size = UDim2.new(0, 215, 0, 260)
-		card.Position = UDim2.new(0, cardX, 0, 200)
+		card.Name = "Card_" .. cls.name
+		card.Size = UDim2.new(0, 195, 0, 360)
+		card.Position = UDim2.new(0, cardX, 0, 140)
 		card.BackgroundColor3 = Color3.fromRGB(40, 35, 55)
 		card.BorderSizePixel = 2
-		card.BorderColor3 = starter.color
+		card.BorderColor3 = cls.color
 		card.Parent = dialog
 		
 		local cardCorner = Instance.new("UICorner")
 		cardCorner.CornerRadius = UDim.new(0, 8)
 		cardCorner.Parent = card
 		
-		-- Emoji / image placeholder
+		-- Emoji classe
 		local emojiLabel = Instance.new("TextLabel")
-		emojiLabel.Size = UDim2.new(1, 0, 0, 80)
+		emojiLabel.Size = UDim2.new(1, 0, 0, 50)
 		emojiLabel.Position = UDim2.new(0, 0, 0, 5)
 		emojiLabel.BackgroundTransparency = 1
-		emojiLabel.TextSize = 50
-		emojiLabel.Text = starter.emoji
+		emojiLabel.TextSize = 38
+		emojiLabel.Text = cls.emoji
 		emojiLabel.Parent = card
 		
-		-- Nom
+		-- Nom classe
 		local nameLabel = Instance.new("TextLabel")
-		nameLabel.Size = UDim2.new(1, -10, 0, 28)
-		nameLabel.Position = UDim2.new(0, 5, 0, 85)
+		nameLabel.Size = UDim2.new(1, -10, 0, 24)
+		nameLabel.Position = UDim2.new(0, 5, 0, 55)
 		nameLabel.BackgroundTransparency = 1
-		nameLabel.TextSize = 18
+		nameLabel.TextSize = 17
 		nameLabel.Font = Enum.Font.GothamBold
-		nameLabel.TextColor3 = starter.color
-		nameLabel.Text = starter.name
+		nameLabel.TextColor3 = cls.color
+		nameLabel.Text = cls.name
 		nameLabel.Parent = card
 		
-		-- Element
-		local elemLabel = Instance.new("TextLabel")
-		elemLabel.Size = UDim2.new(1, -10, 0, 20)
-		elemLabel.Position = UDim2.new(0, 5, 0, 113)
-		elemLabel.BackgroundTransparency = 1
-		elemLabel.TextSize = 13
-		elemLabel.Font = Enum.Font.Gotham
-		elemLabel.TextColor3 = Color3.fromRGB(180, 180, 220)
-		elemLabel.Text = "Type: " .. starter.element
-		elemLabel.Parent = card
+		-- Arme
+		local weaponLabel = Instance.new("TextLabel")
+		weaponLabel.Size = UDim2.new(1, -10, 0, 18)
+		weaponLabel.Position = UDim2.new(0, 5, 0, 82)
+		weaponLabel.BackgroundTransparency = 1
+		weaponLabel.TextSize = 11
+		weaponLabel.Font = Enum.Font.GothamBold
+		weaponLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+		weaponLabel.Text = cls.weaponEmoji .. " " .. cls.weapon
+		weaponLabel.Parent = card
+		
+		-- Description
+		local descLabel = Instance.new("TextLabel")
+		descLabel.Size = UDim2.new(1, -10, 0, 60)
+		descLabel.Position = UDim2.new(0, 5, 0, 104)
+		descLabel.BackgroundTransparency = 1
+		descLabel.TextSize = 10
+		descLabel.Font = Enum.Font.Gotham
+		descLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
+		descLabel.TextWrapped = true
+		descLabel.TextYAlignment = Enum.TextYAlignment.Top
+		descLabel.Text = cls.desc
+		descLabel.Parent = card
 		
 		-- Stats
 		local statsLabel = Instance.new("TextLabel")
-		statsLabel.Size = UDim2.new(1, -10, 0, 50)
-		statsLabel.Position = UDim2.new(0, 5, 0, 135)
+		statsLabel.Size = UDim2.new(1, -10, 0, 16)
+		statsLabel.Position = UDim2.new(0, 5, 0, 168)
 		statsLabel.BackgroundTransparency = 1
-		statsLabel.TextSize = 12
+		statsLabel.TextSize = 9
 		statsLabel.Font = Enum.Font.Gotham
-		statsLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-		statsLabel.TextWrapped = true
-		statsLabel.Text = string.format("HP: %d\nATK: %d | DEF: %d", starter.hp, starter.atk, starter.def)
+		statsLabel.TextColor3 = Color3.fromRGB(150, 200, 150)
+		statsLabel.Text = cls.stats
 		statsLabel.Parent = card
+
+		-- Monstre starter
+		local starterLabel = Instance.new("TextLabel")
+		starterLabel.Size = UDim2.new(1, -10, 0, 18)
+		starterLabel.Position = UDim2.new(0, 5, 0, 188)
+		starterLabel.BackgroundTransparency = 1
+		starterLabel.TextSize = 10
+		starterLabel.Font = Enum.Font.Gotham
+		starterLabel.TextColor3 = Color3.fromRGB(180, 180, 255)
+		starterLabel.Text = "Compagnon: " .. cls.starter
+		starterLabel.Parent = card
+		
+		-- Separator line
+		local sep = Instance.new("Frame")
+		sep.Size = UDim2.new(0.85, 0, 0, 1)
+		sep.Position = UDim2.new(0.075, 0, 0, 215)
+		sep.BackgroundColor3 = cls.color
+		sep.BackgroundTransparency = 0.5
+		sep.BorderSizePixel = 0
+		sep.Parent = card
 		
 		-- Bouton CHOISIR
 		local btn = Instance.new("TextButton")
-		btn.Size = UDim2.new(1, -20, 0, 40)
-		btn.Position = UDim2.new(0, 10, 1, -50)
-		btn.BackgroundColor3 = Color3.fromRGB(60, 180, 60)
-		btn.TextSize = 16
+		btn.Size = UDim2.new(1, -20, 0, 42)
+		btn.Position = UDim2.new(0, 10, 0, 228)
+		btn.BackgroundColor3 = cls.color
+		btn.TextSize = 15
 		btn.Font = Enum.Font.GothamBold
 		btn.TextColor3 = Color3.new(1, 1, 1)
-		btn.Text = "CHOISIR"
+		btn.Text = "CHOISIR " .. cls.name:upper()
 		btn.Parent = card
 		
 		local btnCorner = Instance.new("UICorner")
@@ -187,22 +258,27 @@ local function showDialogueAndStarters()
 		btnCorner.Parent = btn
 		
 		-- Hover effect
+		local origColor = cls.color
 		btn.MouseEnter:Connect(function()
-			btn.BackgroundColor3 = Color3.fromRGB(80, 220, 80)
+			btn.BackgroundColor3 = Color3.new(
+				math.min(1, origColor.R * 1.3),
+				math.min(1, origColor.G * 1.3),
+				math.min(1, origColor.B * 1.3)
+			)
 		end)
 		btn.MouseLeave:Connect(function()
-			btn.BackgroundColor3 = Color3.fromRGB(60, 180, 60)
+			btn.BackgroundColor3 = origColor
 		end)
 		
 		btn.MouseButton1Click:Connect(function()
-			print("[SimpleDialogue] Starter chosen:", starter.name, "id:", starter.id)
+			print("[SimpleDialogue] Class chosen:", cls.name)
 			
-			-- Fire au serveur
-			if requestStarter then
-				requestStarter:FireServer(starter.id)
-				print("[SimpleDialogue] Fired RequestStarter with id", starter.id)
+			-- Fire au serveur (ChangeClass remote)
+			if changeClassRemote then
+				changeClassRemote:FireServer(cls.name)
+				print("[SimpleDialogue] Fired ChangeClass with", cls.name)
 			else
-				warn("[SimpleDialogue] RequestStarter remote not found!")
+				warn("[SimpleDialogue] ChangeClass remote not found!")
 			end
 			
 			-- Message de confirmation
@@ -216,11 +292,14 @@ local function showDialogueAndStarters()
 			confirmText.Size = UDim2.new(1, -40, 1, -40)
 			confirmText.Position = UDim2.new(0, 20, 0, 20)
 			confirmText.BackgroundTransparency = 1
-			confirmText.TextSize = 28
+			confirmText.TextSize = 24
 			confirmText.Font = Enum.Font.GothamBold
-			confirmText.TextColor3 = starter.color
+			confirmText.TextColor3 = cls.color
 			confirmText.TextWrapped = true
-			confirmText.Text = starter.emoji .. " " .. starter.name .. " rejoint ton equipe !\n\nTu recois aussi un Baton de Novice !\n\nLes monstres vont commencer a apparaitre...\nBonne chance, dresseur !"
+			confirmText.Text = cls.emoji .. " Tu es maintenant " .. cls.name .. " !\n\n"
+				.. cls.weaponEmoji .. " Arme: " .. cls.weapon .. "\n"
+				.. "🐾 Compagnon: " .. cls.starter .. "\n\n"
+				.. "Les monstres vont commencer a apparaitre...\nBonne chance, heros !"
 			confirmText.Parent = dialog
 			
 			-- Fermer apres 4 secondes
@@ -257,12 +336,12 @@ local showDialogueSimple = remotes:WaitForChild("ShowDialogueSimple", 10)
 if showDialogueSimple then
 	print("[SimpleDialogue] ShowDialogueSimple remote FOUND! Connecting...")
 	showDialogueSimple.OnClientEvent:Connect(function()
-		print("[SimpleDialogue] SERVER FIRED ShowDialogueSimple! Showing popup!")
-		showDialogueAndStarters()
+		print("[SimpleDialogue] SERVER FIRED ShowDialogueSimple! Showing class selection!")
+		showClassSelection()
 	end)
 	print("[SimpleDialogue] Listener connected!")
 else
 	warn("[SimpleDialogue] ShowDialogueSimple remote NOT FOUND!")
 end
 
-print("[SimpleDialogue V18] Ready! Waiting for NPC interaction...")
+print("[SimpleDialogue V35] Ready! Waiting for NPC interaction (class selection)...")

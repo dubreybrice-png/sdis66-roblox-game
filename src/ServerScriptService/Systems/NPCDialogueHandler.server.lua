@@ -1,8 +1,9 @@
 --[[
-	NPCDialogueHandler V21
+	NPCDialogueHandler V35
 	Gere les dialogues du PNJ guide (Aldric)
-	- Si pas de starter: popup choix du starter
-	- Si starter choisi: Aldric conseille le prochain batiment a construire (RP)
+	- Si pas de classe: popup choix de classe (via SimpleDialogue V35)
+	- Si classe choisie: Aldric conseille le prochain batiment a construire
+	- Donne l'arme adaptee selon la classe choisie
 ]]
 
 local Players = game:GetService("Players")
@@ -32,7 +33,7 @@ local BuildingDB = require(ReplicatedStorage.Data.BuildingDatabase)
 -- Dialogues RP d'Aldric selon le batiment suivant
 local BUILDING_DIALOGUES = {
 	monster_storage = {
-		"Bien joue, jeune dresseur! Ton premier monstre est a tes cotes.",
+		"Bien joue, heros! Ta classe est choisie et ton compagnon est a tes cotes.",
 		"Mais il te faut un endroit pour stocker tes futures captures...",
 		"Construis le CENTRE DE STOCKAGE au nord-est! (50g)",
 		"Ca te permettra de garder plus de monstres.",
@@ -45,9 +46,8 @@ local BUILDING_DIALOGUES = {
 	},
 	class_hall = {
 		"Ta ville commence a prendre forme!",
-		"Il est temps de penser a ta specialisation...",
-		"Construis le HALL DES CLASSES au nord-ouest! (100g)",
-		"Tu pourras choisir ta classe: Guerrier, Archer, Mage ou Acolyte!",
+		"Ameliore le HALL DES CLASSES pour debloquer des options avancees! (100g)",
+		"Tu pourras specialiser ta classe encore plus!",
 	},
 	defense_bureau = {
 		"Le cristal est precieux, il faut mieux le proteger!",
@@ -94,10 +94,10 @@ end
 local function onNPCClicked(player, npc)
 	print("[NPCDialogue] DIALOGUE TRIGGERED BY", player.Name)
 	
-	-- VERIFIER SI LE JOUEUR A DEJA UN STARTER
+	-- VERIFIER SI LE JOUEUR A DEJA CHOISI SA CLASSE
 	local data = PlayerDataService:GetData(player)
-	if data and data.HasStarter then
-		-- Trouver le prochain batiment a construire
+	if data and data.CurrentClass and data.CurrentClass ~= "Novice" then
+		-- Classe deja choisie -> conseiller batiment
 		local nextId, nextData = BuildingDB:GetNextToBuild(data.Buildings or {})
 		
 		if nextId and BUILDING_DIALOGUES[nextId] then
@@ -108,7 +108,7 @@ local function onNPCClicked(player, npc)
 		return
 	end
 	
-	print("[NPCDialogue] Sending simple dialogue popup...")
+	print("[NPCDialogue] Sending class selection popup...")
 	
 	local showDialogueSimple = remotes:FindFirstChild("ShowDialogueSimple")
 	if not showDialogueSimple then
@@ -117,7 +117,7 @@ local function onNPCClicked(player, npc)
 		showDialogueSimple.Parent = remotes
 	end
 	
-	-- Envoyer au client
+	-- Envoyer au client (affiche le popup de classe)
 	print("[NPCDialogue] Firing ShowDialogueSimple to client!")
 	showDialogueSimple:FireClient(player)
 end
@@ -161,29 +161,48 @@ else
 	print("[NPCDialogueHandler] ERROR: GuideNPC not found!")
 end
 
--- Ecouter les choix de starter et donner l'arme
-local requestStarter = remotes:WaitForChild("RequestStarter", 5)
-if requestStarter then
-	requestStarter.OnServerEvent:Connect(function(player, starterMonsterName)
-		print("[NPCDialogueHandler] STARTER CHOSEN:", starterMonsterName, "by", player.Name)
+-- Ecouter les choix de classe (ChangeClass) et donner l'arme adaptee
+local changeClassRemote = remotes:WaitForChild("ChangeClass", 5)
+if changeClassRemote then
+	changeClassRemote.OnServerEvent:Connect(function(player, className)
+		print("[NPCDialogueHandler] CLASS CHOSEN:", className, "by", player.Name)
 		
-		-- Marquer que le joueur a choisi un starter
+		-- Marquer que le joueur a choisi un starter (pour compat)
 		local data = PlayerDataService:GetData(player)
 		if data then
 			data.HasStarter = true
 			print("[NPCDialogueHandler] HasStarter set to TRUE")
 		end
 		
-		-- DONNER LE BATON DE NOVICE
-		local noviceStaff = WeaponSystem.WEAPONS.NOVICE_STAFF
-		WeaponSystem:GiveWeapon(player, noviceStaff)
-		print("[NPCDialogueHandler] Given", noviceStaff.name, "to", player.Name)
+		-- DONNER L'ARME ADAPTEE SELON LA CLASSE
+		local CLASS_WEAPONS = {
+			Guerrier = "WOODEN_SWORD",
+			Mage = "MAGIC_WAND",
+			Archer = "WOODEN_BOW",
+			Moine = "FISTS",
+		}
+		
+		local weaponKey = CLASS_WEAPONS[className] or "NOVICE_STAFF"
+		local weapon = WeaponSystem.WEAPONS[weaponKey]
+		if weapon then
+			WeaponSystem:GiveWeapon(player, weapon)
+			print("[NPCDialogueHandler] Given", weapon.name, "to", player.Name)
+		else
+			-- Fallback
+			WeaponSystem:GiveWeapon(player, WeaponSystem.WEAPONS.NOVICE_STAFF)
+			print("[NPCDialogueHandler] Fallback: Given NOVICE_STAFF to", player.Name)
+		end
 		
 		-- ACTIVER LES MONSTRES (le MonsterSpawner ecoute aussi RequestStarter)
-		print("[NPCDialogueHandler] ACTIVATING MONSTER SPAWNING!")
-		print("[NPCDialogueHandler] Starter selection complete!")
+		local requestStarter = remotes:FindFirstChild("RequestStarter")
+		if requestStarter then
+			-- Fire RequestStarter pour activer le spawner de monstres
+			requestStarter:Fire(player)
+		end
+		
+		print("[NPCDialogueHandler] Class selection complete!")
 	end)
-	print("[NPCDialogueHandler] RequestStarter listener connected")
+	print("[NPCDialogueHandler] ChangeClass listener connected")
 else
-	print("[NPCDialogueHandler] WARNING: RequestStarter remote not found!")
+	print("[NPCDialogueHandler] WARNING: ChangeClass remote not found!")
 end

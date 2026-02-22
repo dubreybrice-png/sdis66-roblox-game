@@ -24,14 +24,14 @@ local DEFAULT_DATA = {
 		Guerrier = 0,
 		Archer = 0,
 		Mage = 0,
-		Acolyte = 0,
+		Moine = 0,
 	},
 	ClassXP = {
 		Novice = 0,
 		Guerrier = 0,
 		Archer = 0,
 		Mage = 0,
-		Acolyte = 0,
+		Moine = 0,
 	},
 	
 	-- === SKILL POINTS (par classe, distribue dans ATK/Agility/Vitality) ===
@@ -318,7 +318,7 @@ function PlayerDataService:ChangeClass(player, newClass)
 	local data = self:GetData(player)
 	if not data then return false end
 	
-	local validClasses = {"Novice", "Guerrier", "Archer", "Mage", "Acolyte"}
+	local validClasses = {"Novice", "Guerrier", "Archer", "Mage", "Moine"}
 	local isValid = false
 	for _, c in ipairs(validClasses) do
 		if c == newClass then isValid = true break end

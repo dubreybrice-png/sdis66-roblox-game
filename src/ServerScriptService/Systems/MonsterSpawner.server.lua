@@ -613,18 +613,16 @@ local function createWildMonster(spawnPos, wildLevel, isBoss, speciesId, rarity)
 	-- BodyVelocity pour mouvement fiable (body.Velocity ne marche pas sur les modeles welds)
 	local bodyMover = Instance.new("BodyVelocity")
 	bodyMover.Name = "Mover"
-	bodyMover.MaxForce = Vector3.new(50000, 50000, 50000) -- force verticale aussi pour hop!
+	bodyMover.MaxForce = Vector3.new(50000, 0, 50000) -- PAS de force Y! la gravite s'en charge
 	bodyMover.Velocity = Vector3.new(0, 0, 0)
 	bodyMover.P = 1250
 	bodyMover.Parent = body
 	
 	monster.Parent = Workspace
 	
-	-- === IA: marcher vers cristal et attaquer (avec HOP!) ===
+	-- === IA: marcher vers cristal et attaquer ===
 	local lastCrystalAttack = 0
 	local lastPlayerAttack = 0
-	local lastHopTime = 0
-	local hopInterval = 1.5 + math.random() * 1.5 -- hop toutes les 1.5-3s
 	local crystalPos = getCrystalPos()
 	
 	task.spawn(function()
@@ -707,27 +705,12 @@ local function createWildMonster(spawnPos, wildLevel, isBoss, speciesId, rarity)
 					end
 				end
 			else
-				-- Marcher vers cristal (BodyVelocity) + HOP!
+				-- Marcher vers cristal (BodyVelocity) au sol
 				local direction = (crystalPos - bodyPos).Unit
-				local now = tick()
-				local hopY = 0
-				if now - lastHopTime > hopInterval then
-					hopY = 22 -- impulse vers le haut (hop!)
-					lastHopTime = now
-					hopInterval = 1.2 + math.random() * 1.8 -- varier le rythme
-				end
-				bodyMover.Velocity = Vector3.new(direction.X * speed, hopY, direction.Z * speed)
+				bodyMover.Velocity = Vector3.new(direction.X * speed, 0, direction.Z * speed)
 				-- Orienter le monstre vers la cible
 				local lookCF = CFrame.lookAt(body.Position, body.Position + direction)
 				body.CFrame = CFrame.new(body.Position) * CFrame.Angles(0, select(2, lookCF:ToEulerAnglesYXZ()), 0)
-				-- Reset Y velocity after short delay
-				if hopY > 0 then
-					task.delay(0.3, function()
-						if bodyMover.Parent then
-							bodyMover.Velocity = Vector3.new(direction.X * speed, -5, direction.Z * speed)
-						end
-					end)
-				end
 			end
 			
 			task.wait(0.15)
@@ -880,10 +863,10 @@ local function spawnDefenderModel(player, monsterData)
 	defender:SetAttribute("OwnerUserId", player.UserId)
 	defender:SetAttribute("MonsterUID", monsterData.UID)
 	
-	-- BodyVelocity pour mouvement fiable des defenseurs (avec hop!)
+	-- BodyVelocity pour mouvement fiable des defenseurs (au sol!)
 	local defMover = Instance.new("BodyVelocity")
 	defMover.Name = "Mover"
-	defMover.MaxForce = Vector3.new(50000, 50000, 50000)
+	defMover.MaxForce = Vector3.new(50000, 0, 50000) -- PAS de force Y!
 	defMover.Velocity = Vector3.new(0, 0, 0)
 	defMover.P = 1250
 	defMover.Parent = body
@@ -891,8 +874,6 @@ local function spawnDefenderModel(player, monsterData)
 	defender.Parent = Workspace
 	
 	-- IA defenseur: attaquer monstres sauvages (AMELIOREE V35!)
-	local defLastHop = 0
-	local defHopInterval = 2 + math.random() * 2
 	local patrolAngle = math.random() * math.pi * 2
 	task.spawn(function()
 		while defender.Parent and hum.Health > 0 do
@@ -963,22 +944,11 @@ local function spawnDefenderModel(player, monsterData)
 					task.wait(1.2)
 				else
 					local dir = (nearestEnemy.PrimaryPart.Position - body.Position).Unit
-					-- Hop quand on poursuit!
-					local hopY = 0
-					if tick() - defLastHop > defHopInterval then
-						hopY = 18
-						defLastHop = tick()
-						defHopInterval = 1.5 + math.random() * 2
-					end
-					defMover.Velocity = Vector3.new(dir.X * 22, hopY, dir.Z * 22)
+					-- Marcher au sol vers l'ennemi
+					defMover.Velocity = Vector3.new(dir.X * 22, 0, dir.Z * 22)
 					-- Face direction
 					local lookCF = CFrame.lookAt(body.Position, body.Position + dir)
 					body.CFrame = CFrame.new(body.Position) * CFrame.Angles(0, select(2, lookCF:ToEulerAnglesYXZ()), 0)
-					if hopY > 0 then
-						task.delay(0.3, function()
-							if defMover.Parent then defMover.Velocity = Vector3.new(dir.X * 22, -5, dir.Z * 22) end
-						end)
-					end
 					task.wait(0.15)
 				end
 			else

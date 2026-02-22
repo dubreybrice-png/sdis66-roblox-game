@@ -67,7 +67,7 @@ WorldBuilder.CreateTown()
 WorldBuilder.CreateSpawnPoints()
 WorldBuilder.CreatePlayerSpawn()
 DojoBuilder.CreateDojo()
-WorldBuilder.CreateClassHall()
+-- ClassHall retire du centre: la classe se choisit via Aldric maintenant
 WorldBuilder.SetupLighting()
 local npc, npcDetector, npcPrompt = WorldBuilder.CreateNPC()
 print("[Server] World created (with improved lighting)")
@@ -104,17 +104,12 @@ local changeClassRemote = remotes:WaitForChild("ChangeClass")
 changeClassRemote.OnServerEvent:Connect(function(player, newClass)
 	local success = PlayerDataService:ChangeClass(player, newClass)
 	if success then
-		-- Donner l'arme correspondante
-		local classWeapons = {
-			Novice = "NOVICE_STAFF",
-			Guerrier = "NOVICE_STAFF", -- on gardera l'epee pour plus tard
-			Archer = "NOVICE_STAFF",
-			Mage = "NOVICE_STAFF",
-			Acolyte = "NOVICE_STAFF",
-		}
-		local weaponKey = classWeapons[newClass] or "NOVICE_STAFF"
-		if WeaponSystem.WEAPONS[weaponKey] then
+		-- Donner l'arme adaptee a la classe
+		local weaponKey = WeaponSystem.CLASS_WEAPON_MAP[newClass]
+		if weaponKey and WeaponSystem.WEAPONS[weaponKey] then
 			WeaponSystem:GiveWeapon(player, WeaponSystem.WEAPONS[weaponKey])
+		else
+			WeaponSystem:GiveWeapon(player, WeaponSystem.WEAPONS.NOVICE_STAFF)
 		end
 	end
 end)
